@@ -1,5 +1,5 @@
 ---
-title: "Transforming Pea data into observed data for sims"
+title: "Transforming Pea data into observed data for sims discovery science"
 author: "R Zyskowski , Adrain Hunt"
 date: "`r Sys.Date()`"
 output:
