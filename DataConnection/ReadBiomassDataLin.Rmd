@@ -1,10 +1,11 @@
 ---
 title: "Transforming Pea data into observed data for sims"
-author: "S. (Mei) Meiyalaghan & Edmar Teixeira"
+author: "R Zyskowski , Adrain Hunt"
 date: "`r Sys.Date()`"
 output:
-  github_document:
+  html_document:
     toc: yes
+  github_document: default
 ---
 
 ## Step-2 data cleaning: Transforming  *Technically correct* (pre-processed) data to *Consistent* data
@@ -218,6 +219,15 @@ df_LincolnData$N_Content_Mat_Grain[df_LincolnData$N_Content_Green_Stem == "-"] <
 df_LincolnData$N_Content_Mat_Grain <- as.numeric(as.character(df_LincolnData$N_Content_Mat_Grain)) 
 
 
+
+for (k in 1:length(df_LincolnData$Final_ResidueSubFW) )
+ {
+   if (isTRUE( df_LincolnData$Final_ResidueSubFW[k] > 0) )       
+   {
+    df_LincolnData$partFW[k] = ((df_LincolnData$Final_ResidueSubFW[k] + df_LincolnData$Final_podFW[k] +df_LincolnData$Final_grainFW[k]))
+   }
+ }
+
 df_LincolnDataMod <-  df_LincolnData %>%
    mutate(perM = (TFW/partFW/HA)) %>%
    mutate(partDW = (greenleafDW + deadstemDW + deadleafDW + greenstemDW + greenpodDW + greengrainDW + maturepodDW + maturegrainDW)) %>%
@@ -238,6 +248,7 @@ df_LincolnDataMod <-  df_LincolnDataMod %>%
 df_LincolnDataMod$FGW <- as.numeric(as.character(df_LincolnDataMod$FGW)) 
 df_LincolnDataMod$FGW[is.na(df_LincolnDataMod$FGW)] <- 0 
 
+df_LincolnDataMod$FieldPea.Grain.Mature.Wt[is.nan(df_LincolnDataMod$FieldPea.Grain.Mature.Wt) == TRUE] <- NA 
 
 df_LincolnDataMod <-  df_LincolnDataMod %>%
   mutate(GrainWT =  FieldPea.Grain.Live.Wt+FieldPea.Grain.Mature.Wt+ FGW)
@@ -266,6 +277,7 @@ df_LincolnDataMod <-  df_LincolnDataMod %>%
  df_LincolnDataMod <-  df_LincolnDataMod %>%
     mutate(FieldPea.Grain.Mature.N = FieldPea.Grain.Mature.NConc * FieldPea.Grain.Mature.Wt )
  
+df_LincolnDataMod$N_Content_Mat_Grain[df_LincolnDataMod$N_Content_Mat_Grain == "-"] <- NA 
 
 
 #protein 
