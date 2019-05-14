@@ -156,9 +156,9 @@ df_HBData$N_Content_Green_Stem[df_HBData$N_Content_Green_Stem == "-"] <- NA
 
 df_HBData$N_Content_Green_Stem <- as.numeric(as.character(df_HBData$N_Content_Green_Stem)) 
 
-df_HBData$N_Content_Green_Grain[df_HBData$N_Content_Green_Stem == "-"] <- NA 
+df_HBData$N_Content_Green_Grain[df_HBData$N_Content_Green_Grain == "-"] <- NA 
 df_HBData$N_Content_Green_Grain <- as.numeric(as.character(df_HBData$N_Content_Green_Grain)) 
-df_HBData$N_Content_Mat_Grain[df_HBData$N_Content_Green_Stem == "-"] <- NA 
+df_HBData$N_Content_Mat_Grain[df_HBData$N_Content_Mat_Grain == "-"] <- NA 
 df_HBData$N_Content_Mat_Grain <- as.numeric(as.character(df_HBData$N_Content_Mat_Grain)) 
 
 
