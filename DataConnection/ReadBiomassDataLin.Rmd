@@ -401,54 +401,54 @@ print(cd_Path)
 
 
 ** 2. Save *Consistent* data for APSIM-X **
-```{r}
-#drop units columns that will be added later....
-df_forAPSIM <- df_ConsistData_latest %>%
- # mutate(Irr=factor(Irr),Nit=factor(Nit)) %>%
-  mutate(Clock.Today=as.Date(ymd(Clock.Today))) %>%
-  mutate(Clock.Today=as.character(as.Date(Clock.Today, "%Y-%m-%d"))) %>%
-  dplyr::select(-Plot,-Block,-Nit,-Irr,-Code) %>%
-  group_by(Clock.Today,SimulationName) %>%
-  summarise_all(funs(mean)) %>%
-  mutate(SimulationName = factor(SimulationName))%>%
-  ungroup()%>%
-  as.data.frame()
-
-summary(df_forAPSIM)
+```{r, include= FALSE}
+# #drop units columns that will be added later....
+# df_forAPSIM <- df_ConsistData_latest %>%
+#  # mutate(Irr=factor(Irr),Nit=factor(Nit)) %>%
+#   mutate(Clock.Today=as.Date(ymd(Clock.Today))) %>%
+#   mutate(Clock.Today=as.character(as.Date(Clock.Today, "%Y-%m-%d"))) %>%
+#   dplyr::select(-Plot,-Block,-Nit,-Irr,-Code) %>%
+#   group_by(Clock.Today,SimulationName) %>%
+#   summarise_all(funs(mean)) %>%
+#   mutate(SimulationName = factor(SimulationName))%>%
+#   ungroup()%>%
+#   as.data.frame()
+# 
+# summary(df_forAPSIM)
 
 ```
 
 Save *Consistent* data for APSIM-X
-```{r}
-#save consist data for APSIM-X
-apx_Path <- paste0(FileSaveDir_APSIM, "/OBS_",dataset_name,".txt")
-write.table(df_forAPSIM, apx_Path, row.names = F, quote = F, sep = '\t')
+```{r, include= FALSE}
+# #save consist data for APSIM-X
+# apx_Path <- paste0(FileSaveDir_APSIM, "/OBS_",dataset_name,".txt")
+# write.table(df_forAPSIM, apx_Path, row.names = F, quote = F, sep = '\t')
 ```
 
 
-## Get and view units for both Field and APSIM
+Get and view units for both Field and APSIM
 
-```{r}
-dfTemp1_lbs <- read.xlsx(PreprocessedFile, sheetName = "lookupVariables") # no need to inlcude `col_names = TRUE` - Mei 22/5/2018
-
-# remove NA rows 
-
-dfTemp1_lbs <- dfTemp1_lbs[complete.cases(dfTemp1_lbs), ]
-
-#look at df
-dfTemp1_lbs
-
-# for all cols to factors - this step not needed, Mei 22/5/2018
-#cols <- colnames(dfTemp1_lbs)
-#dfTemp1_lbs[cols] <- lapply(dfTemp1_lbs[cols], factor)
-
-
-# remove unnecessary fields i.e. Drop data frame columns by name
-drops <- c("Name_Field", "Units_Field") # "col_names" has been excluded now, so no need to inlcude in drops - mei
-dfTemp1_lbs <- dfTemp1_lbs[ , !names(dfTemp1_lbs) %in% drops]
-
-
-head(dfTemp1_lbs, nrow(dfTemp1_lbs)) #FIXME: need to remove unwanted col 'col_names' which was added during factor conversion! (done? - eit); Done, see above codes - Mei 22/05/2018
+```{r, include= FALSE}
+# dfTemp1_lbs <- read.xlsx(PreprocessedFile, sheetName = "lookupVariables") # no need to inlcude `col_names = TRUE` - Mei 22/5/2018
+# 
+# # remove NA rows 
+# 
+# dfTemp1_lbs <- dfTemp1_lbs[complete.cases(dfTemp1_lbs), ]
+# 
+# #look at df
+# dfTemp1_lbs
+# 
+# # for all cols to factors - this step not needed, Mei 22/5/2018
+# #cols <- colnames(dfTemp1_lbs)
+# #dfTemp1_lbs[cols] <- lapply(dfTemp1_lbs[cols], factor)
+# 
+# 
+# # remove unnecessary fields i.e. Drop data frame columns by name
+# drops <- c("Name_Field", "Units_Field") # "col_names" has been excluded now, so no need to inlcude in drops - mei
+# dfTemp1_lbs <- dfTemp1_lbs[ , !names(dfTemp1_lbs) %in% drops]
+# 
+# 
+# head(dfTemp1_lbs, nrow(dfTemp1_lbs)) #FIXME: need to remove unwanted col 'col_names' which was added during factor conversion! (done? - eit); Done, see above codes - Mei 22/05/2018
 
 ```
 
@@ -456,42 +456,42 @@ head(dfTemp1_lbs, nrow(dfTemp1_lbs)) #FIXME: need to remove unwanted col 'col_na
 ## Incoporate missing labels
 
 ```{r}
-#get variables from df_forAPSIM to list as labels names under colname of `Name_APSIM` in data frame dfTemp2_lbs
-dfTemp2_lbs <- data.frame(Name_APSIM = colnames(df_forAPSIM))
-
-#get rows those are NOT found in dfTemp1_lbs  col `Name_APSIM` thus avoiding duplicates
-dfTemp2_lbs <- anti_join(dfTemp2_lbs, dfTemp1_lbs, by = "Name_APSIM")
-
-
-dfTemp2_lbs  #look at df to see any unwanted rows to drop
-# drop unwanted rows
-
-dropRows <- c("SimulationName")
-
-dfTemp2_lbs <- dfTemp2_lbs %>%
-  filter(!Name_APSIM %in% dropRows)
-
-#add Units_APSIM and VarClass
-dfTemp2_lbs <- dfTemp2_lbs %>% 
-   mutate(Units_APSIM = ifelse(grepl('.Wt', Name_APSIM), yes = "g/m2", no = "fractional")) %>%  
-   mutate(VarClass = ifelse(grepl('.Wt', Name_APSIM), yes = "Biomass", no = "PlantN")) 
-   
-#To keep all rows from both data frames in a final df for labels
-labelsFinal <- merge(dfTemp1_lbs, dfTemp2_lbs, all = TRUE) 
-
-print(labelsFinal)
+# #get variables from df_forAPSIM to list as labels names under colname of `Name_APSIM` in data frame dfTemp2_lbs
+# dfTemp2_lbs <- data.frame(Name_APSIM = colnames(df_forAPSIM))
+# 
+# #get rows those are NOT found in dfTemp1_lbs  col `Name_APSIM` thus avoiding duplicates
+# dfTemp2_lbs <- anti_join(dfTemp2_lbs, dfTemp1_lbs, by = "Name_APSIM")
+# 
+# 
+# dfTemp2_lbs  #look at df to see any unwanted rows to drop
+# # drop unwanted rows
+# 
+# dropRows <- c("SimulationName")
+# 
+# dfTemp2_lbs <- dfTemp2_lbs %>%
+#   filter(!Name_APSIM %in% dropRows)
+# 
+# #add Units_APSIM and VarClass
+# dfTemp2_lbs <- dfTemp2_lbs %>% 
+#    mutate(Units_APSIM = ifelse(grepl('.Wt', Name_APSIM), yes = "g/m2", no = "fractional")) %>%  
+#    mutate(VarClass = ifelse(grepl('.Wt', Name_APSIM), yes = "Biomass", no = "PlantN")) 
+#    
+# #To keep all rows from both data frames in a final df for labels
+# labelsFinal <- merge(dfTemp1_lbs, dfTemp2_lbs, all = TRUE) 
+# 
+# print(labelsFinal)
 ```
 
 
 ### save labels
 
 ```{r}
-#save labels in txt file
-txtFilePath <- paste0("K:/Rainshelter/MultiCropRotation_APSIM_X/Labels/LBS_",dataset_name,".txt") 
-
-# save to unit labels
-write.table(labelsFinal,
-            txtFilePath, 
-            row.names = F, quote = F, sep = '\t')
+# #save labels in txt file
+# txtFilePath <- paste0("K:/Rainshelter/MultiCropRotation_APSIM_X/Labels/LBS_",dataset_name,".txt") 
+# 
+# # save to unit labels
+# write.table(labelsFinal,
+#             txtFilePath, 
+#             row.names = F, quote = F, sep = '\t')
 ```
 
