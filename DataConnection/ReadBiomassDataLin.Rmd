@@ -48,7 +48,7 @@ library(lubridate)
 library(plyr);library(dplyr)
 library(dplyr)
 library(tidyr)
-library(xlsx)
+#library(xlsx)
 library(ggplot2)
 library(magrittr) #required to use the pipe (%>%) operator
 ```
@@ -359,7 +359,9 @@ df_LincolnDataSum %>%
   ggplot(aes(x=Clock.Today,y=(FieldPea.leaf.Live.Wt),colour=Block, linetype=Trt_num,shape=Trt_num)) +
   geom_point(size=2,alpha=0.5) +
   geom_line() +
-  ylab("g/m2") 
+  ylab("field Pea leaf live wt(g/m2)")+
+  ggtitle("field Pea leaf wt")
+  
  
 ```
 
