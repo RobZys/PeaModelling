@@ -419,6 +419,16 @@ df_HBDataSum %>%
   geom_errorbar(aes(ymin=FieldPea.Grain.Mature.NConc_mean-FieldPea.Grain.Mature.NConc_se, ymax=FieldPea.Grain.Mature.NConc_mean + FieldPea.Grain.Mature.NConc_se))
   
 ```
+```{r}
+df_HBDataSum %>%
+   ggplot(aes(x=Clock.Today,y=(GrainWT_mean),colour=Trt_name, linetype=Trt_name,shape=Trt_name)) +
+  geom_point(size=2,alpha=0.5) +
+  geom_line() +
+  ylab("g/m2")+
+  ggtitle("Hawkes Bay Grain wt") +
+  geom_errorbar(aes(ymin=GrainWT_mean-GrainWT_se, ymax=GrainWT_mean + GrainWT_se))
+
+```
 
 ### Save Consistent Data
 

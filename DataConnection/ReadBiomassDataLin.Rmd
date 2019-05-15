@@ -386,6 +386,16 @@ df_LincolnDataSum %>%
   geom_errorbar(aes(ymin=FieldPea.Grain.Protein_mean-FieldPea.Grain.Protein_se, ymax=FieldPea.Grain.Protein_mean + FieldPea.Grain.Protein_se))
 
 ```
+```{r}
+df_LincolnDataSum %>%
+   ggplot(aes(x=Clock.Today,y=(GrainWT_mean),colour=Trt_name, linetype=Trt_name,shape=Trt_name)) +
+  geom_point(size=2,alpha=0.5) +
+  geom_line() +
+  ylab("g/m2")+
+  ggtitle("Lincoln Grain wt") +
+  geom_errorbar(aes(ymin=GrainWT_mean-GrainWT_se, ymax=GrainWT_mean + GrainWT_se))
+  
+```
 
 ### Save Consistent Data
 
