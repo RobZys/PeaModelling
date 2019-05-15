@@ -1,6 +1,6 @@
 ---
 title: "Transforming Pea data into observed data for sims"
-author: "R Zyskowski , Adrain Hunt"
+author: "R Zyskowski , Adrian Hunt"
 date: "`r Sys.Date()`"
 output:
   html_document:
