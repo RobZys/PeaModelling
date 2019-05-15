@@ -266,7 +266,11 @@ df_HBDataMod <-  df_HBData %>%
   mutate(FieldPea.leaf.LAI = Leaf_area/FieldPea.leaf.Live.Wt)
 
 df_HBDataMod <-  df_HBDataMod %>%
-  mutate(FGW = Final_100grainDW*Final_grainFW/Final_100grainFW/HA)
+#  mutate(FGW = Final_100grainDW*Final_grainFW/Final_100grainFW/HA)
+  mutate(FGW = ((Final_100grainDW*Final_grainFW/Final_100grainFW/HA) + (Final_grainSproutedDW*Final_grainFW/Final_grainSproutedFW/HA)))
+
+
+
 
 df_HBDataMod$FGW <- as.numeric(as.character(df_HBDataMod$FGW)) 
 df_HBDataMod$FGW[is.na(df_HBDataMod$FGW)] <- 0 
@@ -275,11 +279,12 @@ df_HBDataMod$FGW[is.na(df_HBDataMod$FGW)] <- 0
 df_HBDataMod <-  df_HBDataMod %>%
   mutate(GrainWT =  FieldPea.Grain.Live.Wt+FieldPea.Grain.Mature.Wt+ FGW)
 
-#for (k in 1:length(df_HBDataMod$FGW) )
-# {
-#  if (is.numeric(isTRUE(df_HBDataMod$FGW) == TRUE))
-#       df_HBDataMod$FieldPea.Grain.Mature.Wt[k] = df_HBData$FieldPea.Grain.Mature.Wt[k] + df_HBDataMod$FGW[k]
-#}
+
+for (k in 1:length(df_HBDataMod$FGW) )
+ {
+  if (is.numeric(isTRUE(df_HBDataMod$FGW) == TRUE))
+       df_HBDataMod$FieldPea.Grain.Mature.Wt[k] = df_HBData$FieldPea.Grain.Mature.Wt[k] + df_HBDataMod$FGW[k]
+}
 
 #N content  
   
@@ -406,7 +411,8 @@ df_HBDataSum %>%
   geom_point(size=2,alpha=0.5) +
   geom_line() +
   ylab("g/m2") +
-  geom_errorbar(aes(ymin=FieldPea.Grain.Protein_mean-FieldPea.Grain.Protein_se, ymax=FieldPea.Grain.Protein_mean + FieldPea.Grain.Protein_se))
+ ggtitle("Hawkes Bay Pea Protein Yield") +
+ geom_errorbar(aes(ymin=FieldPea.Grain.Protein_mean-FieldPea.Grain.Protein_se, ymax=FieldPea.Grain.Protein_mean + FieldPea.Grain.Protein_se))
 
 
 ```
@@ -416,8 +422,19 @@ df_HBDataSum %>%
   geom_bar(stat="identity") +
   geom_line() +
   ylab("%")+
+  ggtitle("Hawkes Bay Pea Nitrogen Concentration at 'Mature' harvest") +
   geom_errorbar(aes(ymin=FieldPea.Grain.Mature.NConc_mean-FieldPea.Grain.Mature.NConc_se, ymax=FieldPea.Grain.Mature.NConc_mean + FieldPea.Grain.Mature.NConc_se))
   
+```
+```{r}
+df_HBDataSum %>%
+   ggplot(aes(x=Clock.Today,y=(GrainWT_mean),colour=Trt_name, linetype=Trt_name,shape=Trt_name)) +
+  geom_point(size=2,alpha=0.5) +
+  geom_line() +
+  ylab("DM g/m2")+
+  ggtitle("Hawkes Bay Grain Weight") +
+  geom_errorbar(aes(ymin=GrainWT_mean-GrainWT_se, ymax=GrainWT_mean + GrainWT_se))
+
 ```
 
 ### Save Consistent Data
