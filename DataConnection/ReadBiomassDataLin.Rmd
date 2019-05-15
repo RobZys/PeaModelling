@@ -375,11 +375,20 @@ df_LincolnDataSum %>%
   geom_errorbar(aes(ymin=FieldPea.leaf.LeafArea_mean-FieldPea.leaf.LeafArea_se, ymax=FieldPea.leaf.LeafArea_mean + FieldPea.leaf.LeafArea_se))
 
 ```
+```{r}
+df_LincolnDataSum %>%
+  ggplot(aes(x=Trt_name,y=(FieldPea.Grain.Mature.NConc_mean),colour= Trt_name)) +
+  geom_bar(stat="identity") +
+  geom_line() +
+  ylab("%")+
+  geom_errorbar(aes(ymin=FieldPea.Grain.Mature.NConc_mean-FieldPea.Grain.Mature.NConc_se, ymax=FieldPea.Grain.Mature.NConc_mean + FieldPea.Grain.Mature.NConc_se))
+
+```
 
 #### Compare N% and biomass in a organ
 ```{r}
 df_LincolnDataSum %>%
-   ggplot(aes(x=Clock.Today,y=(FieldPea.Grain.Protein_mean),colour=Trt_name, linetype=Trt_name,shape=Trt_name)) +
+ ggplot(aes(x=Clock.Today,y=(FieldPea.Grain.Protein_mean),colour=Trt_name, linetype=Trt_name,shape=Trt_name)) +
   geom_point(size=2,alpha=0.5) +
   geom_line() +
   ylab("g/m2")+

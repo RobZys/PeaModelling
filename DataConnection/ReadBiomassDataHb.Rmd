@@ -275,11 +275,11 @@ df_HBDataMod$FGW[is.na(df_HBDataMod$FGW)] <- 0
 df_HBDataMod <-  df_HBDataMod %>%
   mutate(GrainWT =  FieldPea.Grain.Live.Wt+FieldPea.Grain.Mature.Wt+ FGW)
 
-#for (k in 1:length(df_HBDataMod$FGW) )
-# {
-#  if (is.numeric(isTRUE(df_HBDataMod$FGW) == TRUE))
-#       df_HBDataMod$FieldPea.Grain.Mature.Wt[k] = df_HBData$FieldPea.Grain.Mature.Wt[k] + df_HBDataMod$FGW[k]
-#}
+for (k in 1:length(df_HBDataMod$FGW) )
+ {
+  if (is.numeric(isTRUE(df_HBDataMod$FGW) == TRUE))
+       df_HBDataMod$FieldPea.Grain.Mature.Wt[k] = df_HBData$FieldPea.Grain.Mature.Wt[k] + df_HBDataMod$FGW[k]
+}
 
 #N content  
   
