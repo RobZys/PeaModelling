@@ -395,10 +395,10 @@ df_LincolnDataSum %>%
 
 # gather all variable in one column and values..
 
-cd_Path <- paste0(DestRootDir, "ObservedData_",dataset_name,".txt")
+#cd_Path <- paste0(DestRootDir, "ObservedData_",dataset_name,".txt")
 
-write.table(df_LincolnDataSum,cd_Path , row.names = F, quote = F, sep = '\t')
-print(cd_Path)
+#write.table(df_LincolnDataSum,cd_Path , row.names = F, quote = F, sep = '\t')
+#print(cd_Path)
 
 ```
 
