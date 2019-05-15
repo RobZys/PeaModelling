@@ -388,32 +388,36 @@ df_HBDataSum %>%
 
 
 ```{r}
-df_HBDataSum %>%
-  mutate(Trt_num =factor(Trt_num, levels=c(1:6))) %>%
-  ggplot(aes(x=Clock.Today,y=(FieldPea.Stem.Live.Wt),colour=Block, linetype=Trt_num,shape=Trt_num)) +
+psetm <- df_HBDataSum %>%
+  ggplot(aes(x=Clock.Today,y=(FieldPea.Stem.Live.Wt_mean), colour= Trt_name, linetype=Trt_name,shape=Trt_name)) +
   geom_point(size=2,alpha=0.5) +
   geom_line() +
-  ylab("g/m2") 
+  ylab("g/m2")+
+  geom_errorbar(aes(ymin=FieldPea.Stem.Live.Wt_mean-FieldPea.Stem.Live.Wt_se, ymax=FieldPea.Stem.Live.Wt_mean + FieldPea.Stem.Live.Wt_se))
+psetm
 
 ```
 
 #### Compare N% and biomass in a Grain
 ```{r}
 df_HBDataSum %>%
-  mutate(Trt_num =factor(Trt_num, levels=c(1:6))) %>%
-  ggplot(aes(x=Clock.Today,y=(FieldPea.Grain.Protein),colour=Block, linetype=Trt_num,shape=Trt_num)) +
+  
+  ggplot(aes(x=Clock.Today,y=(FieldPea.Grain.Protein_mean),colour= Trt_name, linetype=Trt_name,shape=Trt_name)) +
   geom_point(size=2,alpha=0.5) +
   geom_line() +
-  ylab("g/m2") 
+  ylab("g/m2") +
+  geom_errorbar(aes(ymin=FieldPea.Grain.Protein_mean-FieldPea.Grain.Protein_se, ymax=FieldPea.Grain.Protein_mean + FieldPea.Grain.Protein_se))
+
 
 ```
 ```{r}
 df_HBDataSum %>%
-  mutate(Trt_num =factor(Trt_num, levels=c(1:6))) %>%
-  ggplot(aes(x=Clock.Today,y=(FieldPea.Grain.Mature.NConc),colour=Block, linetype=Trt_num,shape=Trt_num)) +
-  geom_point(size=2,alpha=0.5) +
+  ggplot(aes(x=Trt_name,y=(FieldPea.Grain.Mature.NConc_mean),colour= Trt_name)) +
+  geom_bar(stat="identity") +
   geom_line() +
-  ylab("g/m2") 
+  ylab("%")+
+  geom_errorbar(aes(ymin=FieldPea.Grain.Mature.NConc_mean-FieldPea.Grain.Mature.NConc_se, ymax=FieldPea.Grain.Mature.NConc_mean + FieldPea.Grain.Mature.NConc_se))
+  
 ```
 
 ### Save Consistent Data
