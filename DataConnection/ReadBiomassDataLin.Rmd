@@ -313,7 +313,7 @@ head(df_LincolnDataMod)
 df_LincolnDataSum<- df_LincolnDataMod %>% 
   group_by(Date,Trt_name) %>%  
 
-  summarise_all(list(mean))
+ summarise_if(is.numeric,funs(mean,se=sd(.)/sqrt(n())))
   
    
 summary(df_LincolnDataSum)
@@ -355,12 +355,12 @@ summary(df_LincolnDataSum)
 
 ```{r, fig.width = 12}
 df_LincolnDataSum %>%
-  mutate(Trt_num =factor(Trt_num, levels=c(1:6))) %>%
-  ggplot(aes(x=Clock.Today,y=(FieldPea.leaf.Live.Wt),colour=Block, linetype=Trt_num,shape=Trt_num)) +
+ ggplot(aes(x=Clock.Today,y=(FieldPea.leaf.Live.Wt_mean),colour=Trt_name, linetype=Trt_name,shape=Trt_name)) +
   geom_point(size=2,alpha=0.5) +
   geom_line() +
-  ylab("field Pea leaf live wt(g/m2)")+
-  ggtitle("field Pea leaf wt")
+  ylab("g/m2")+
+  geom_errorbar(aes(ymin=FieldPea.leaf.Live.Wt_mean-FieldPea.leaf.Live.Wt_se, ymax=FieldPea.leaf.Live.Wt_mean + FieldPea.leaf.Live.Wt_se))
+# ggtitle("field Pea leaf wt")
   
  
 ```
@@ -368,22 +368,23 @@ df_LincolnDataSum %>%
 
 ```{r}
 df_LincolnDataSum %>%
-  mutate(Trt_num =factor(Trt_num, levels=c(1:6))) %>%
-  ggplot(aes(x=Clock.Today,y=(FieldPea.leaf.LeafArea),colour=Block, linetype=Trt_num,shape=Trt_num)) +
+  ggplot(aes(x=Clock.Today,y=(FieldPea.leaf.LeafArea_mean),colour=Trt_name, linetype=Trt_name,shape=Trt_name)) +
   geom_point(size=2,alpha=0.5) +
   geom_line() +
-  ylab("Leaf Area") 
+  ylab("g/m2")+
+  geom_errorbar(aes(ymin=FieldPea.leaf.LeafArea_mean-FieldPea.leaf.LeafArea_se, ymax=FieldPea.leaf.LeafArea_mean + FieldPea.leaf.LeafArea_se))
 
 ```
 
 #### Compare N% and biomass in a organ
 ```{r}
 df_LincolnDataSum %>%
-  mutate(Trt_num =factor(Trt_num, levels=c(1:6))) %>%
-  ggplot(aes(x=Clock.Today,y=(FieldPea.Grain.Protein),colour=Block, linetype=Trt_num,shape=Trt_num)) +
+   ggplot(aes(x=Clock.Today,y=(FieldPea.Grain.Protein_mean),colour=Trt_name, linetype=Trt_name,shape=Trt_name)) +
   geom_point(size=2,alpha=0.5) +
   geom_line() +
-  ylab("g/m2") 
+  ylab("g/m2")+
+  geom_errorbar(aes(ymin=FieldPea.Grain.Protein_mean-FieldPea.Grain.Protein_se, ymax=FieldPea.Grain.Protein_mean + FieldPea.Grain.Protein_se))
+
 ```
 
 ### Save Consistent Data
