@@ -48,9 +48,11 @@ library(lubridate)
 library(plyr);library(dplyr)
 library(dplyr)
 library(tidyr)
-library(xlsx)
 library(ggplot2)
 library(magrittr) #required to use the pipe (%>%) operator
+library(readxl)
+library(tidyverse)
+
 ```
 
 
@@ -197,6 +199,13 @@ na.omit(df_HBData)
 Correct Biomass units from g/area to g/m2 and N conc units from % to 0-1
 
 ```{r}
+
+#set factors as Char
+
+df_HBData$Plot<-as.character(df_HBData$Plot)
+df_HBData$Block<-as.character(df_HBData$Block)
+df_HBData$Trt_num<-as.character(df_HBData$Trt_num)
+
  
 df_HBData$partFW <- as.numeric(as.character(df_HBData$partFW)) 
 df_HBData$greenleafDW <- as.numeric(as.character(df_HBData$greenleafDW)) 
@@ -327,7 +336,7 @@ summary(df_HBDataMod)
 df_HBDataSum<- df_HBDataMod %>% 
   group_by(Date,Trt_name) %>%  
 
-  summarise_all(list(mean))
+  summarise_if(is.numeric,funs(mean,se=sd(.)/sqrt(n())))
   
    
 summary(df_HBDataSum)
@@ -369,11 +378,11 @@ summary(df_HBDataSum)
 
 ```{r, fig.width = 12}
 df_HBDataSum %>%
-  mutate(Trt_num =factor(Trt_num, levels=c(1:6))) %>%
- ggplot(aes(x=Clock.Today,y=(FieldPea.leaf.Live.Wt),colour=Block, linetype=Trt_num,shape=Trt_num)) +
+ ggplot(aes(x=Clock.Today,y=(FieldPea.leaf.Live.Wt_mean),colour=Trt_name, linetype=Trt_name,shape=Trt_name)) +
   geom_point(size=2,alpha=0.5) +
   geom_line() +
-  ylab("g/m2") 
+  ylab("g/m2")+
+  geom_errorbar(aes(ymin=FieldPea.leaf.Live.Wt_mean-FieldPea.leaf.Live.Wt_se, ymax=FieldPea.leaf.Live.Wt_mean + FieldPea.leaf.Live.Wt_se))
  
 ```
 
