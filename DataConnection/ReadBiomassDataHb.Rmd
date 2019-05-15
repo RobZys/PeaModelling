@@ -275,11 +275,11 @@ df_HBDataMod$FGW[is.na(df_HBDataMod$FGW)] <- 0
 df_HBDataMod <-  df_HBDataMod %>%
   mutate(GrainWT =  FieldPea.Grain.Live.Wt+FieldPea.Grain.Mature.Wt+ FGW)
 
-#for (k in 1:length(df_HBDataMod$FGW) )
-# {
-#  if (is.numeric(isTRUE(df_HBDataMod$FGW) == TRUE))
-#       df_HBDataMod$FieldPea.Grain.Mature.Wt[k] = df_HBData$FieldPea.Grain.Mature.Wt[k] + df_HBDataMod$FGW[k]
-#}
+for (k in 1:length(df_HBDataMod$FGW) )
+ {
+  if (is.numeric(isTRUE(df_HBDataMod$FGW) == TRUE))
+       df_HBDataMod$FieldPea.Grain.Mature.Wt[k] = df_HBData$FieldPea.Grain.Mature.Wt[k] + df_HBDataMod$FGW[k]
+}
 
 #N content  
   
@@ -418,6 +418,16 @@ df_HBDataSum %>%
   ylab("%")+
   geom_errorbar(aes(ymin=FieldPea.Grain.Mature.NConc_mean-FieldPea.Grain.Mature.NConc_se, ymax=FieldPea.Grain.Mature.NConc_mean + FieldPea.Grain.Mature.NConc_se))
   
+```
+```{r}
+df_HBDataSum %>%
+   ggplot(aes(x=Clock.Today,y=(GrainWT_mean),colour=Trt_name, linetype=Trt_name,shape=Trt_name)) +
+  geom_point(size=2,alpha=0.5) +
+  geom_line() +
+  ylab("g/m2")+
+  ggtitle("Hawkes Bay Grain wt") +
+  geom_errorbar(aes(ymin=GrainWT_mean-GrainWT_se, ymax=GrainWT_mean + GrainWT_se))
+
 ```
 
 ### Save Consistent Data
