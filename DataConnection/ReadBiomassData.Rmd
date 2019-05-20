@@ -230,7 +230,7 @@ sum_it<- function(frame=df_CombinedData,var1 ){
   group_by(Date,Trt_name, Site) %>% 
   summarise_at(.vars = var1,funs(mean,se=sd(.)/sqrt(n())))
   
-print(sum_mean)
+#print(sum_mean)
 }
 
 
@@ -243,16 +243,24 @@ plot_it<- function(frame=df_CombinedData,var1){
   it_plot <- ggplot(data=sum_mean, aes(x=Date,y=mean, colour=Trt_name, shape=Site))+
     geom_point()+
     geom_line()+ 
-    geom_errorbar(aes(ymin=mean-se,ymax=mean+se))
+    geom_errorbar(aes(ymin=mean-se,ymax=mean+se))+
+    facet_grid(~Site)
   
   it_plot
-  
-  
 }
+
+
+```
+look at some data
+```{r}
+Psum <- plot_it(var1="grainDW")
 
 plot_it(var1="GrainWT")
 
+
+Psum
 ```
+
 
 
 
