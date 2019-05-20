@@ -181,6 +181,7 @@ for (k in 1:length(df_CombinedData$TFW) ) #any column will do for length
 # leaf & stem
 df_CombinedData$SampleLeafDW <- df_CombinedData$greenleafDW
 df_CombinedData$SampleStemDW <- df_CombinedData$greenstemDW
+df_CombinedData$SamplePodDW <- df_CombinedData$greenpodDW
 
 # Dead leaf and Stem
 df_CombinedData$SampleDeadDW <- df_CombinedData$deadFW
@@ -245,6 +246,25 @@ df_CombinedData <- df_CombinedData %>%  mutate(SampleGrainWT = (SampleFGW+ Sampl
 
 ```
 
+# have sample values - need plot values g/m2
+```{r}
+
+df_CombinedData <-  df_CombinedData %>%
+   mutate(perM = (SampleFW/PARTFW/HA)) %>%
+   mutate(partDW = (SampleLeafDW + SampleStemDW + SampleDeadDW  + SamplePodDW + maturepodDW + SampleGrainWT)) %>%
+   mutate(AboveGroundWt = (perM*partDW) )%>%
+  mutate(leafLiveWt = perM*(SampleLeafDW)) %>%
+   mutate(StemLiveWt = perM*(SampleStemDW)) %>%
+  mutate(DeadWt = perM*(SampleDeadDW)) %>%
+   mutate(PodLiveWt = perM*(SamplePodDW)) %>%
+   mutate(GrainWt = perM*(SampleGrainWT)) %>%
+   mutate(GrainLiveWt = perM*(SampleGWt)) %>%
+   mutate(LeafArea = perM*(Leaf_area)) %>%
+   mutate(leafLAI = Leaf_area/leafLiveWt)
+
+
+
+```
 
 
 #Summary mean and se grouped by site, treatment and clock as function
@@ -278,7 +298,7 @@ plot_it<- function(frame=df_CombinedData,var1){
 ```
 look at some data
 ```{r}
-Psum <- plot_it(var1="SampleGrainWT")
+Psum <- plot_it(var1="GrainWt")
 
 #plot_it(var1="GrainWT")
 
