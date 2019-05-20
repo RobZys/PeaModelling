@@ -247,18 +247,20 @@ plot_it<- function(frame=df_CombinedData,var1){
     facet_grid(~Site)
   
   it_plot
-  
-  
 }
 
-<<<<<<< HEAD
+
+```
+look at some data
+```{r}
 Psum <- plot_it(var1="grainDW")
-=======
+
 plot_it(var1="GrainWT")
->>>>>>> 475a6d047553f39c21bc84098f6e89633d61eab9
+
 
 Psum
 ```
+
 
 
 
