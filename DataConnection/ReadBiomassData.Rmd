@@ -143,6 +143,8 @@ df_RAW_HB<- scrape_xl(url, sheet =  Source_HB, skip = 2)
 
 df_RAW_HB$Index  <- NULL
 df_RAW_Lincoln$Index  <- NULL
+#name contains &
+names(df_RAW_Lincoln)[38] <- "FinalPodPeaFW"
 
 ```
 
@@ -197,7 +199,8 @@ df_LincolnData$Site = "Lincoln"
 ```
 ```{r}
 df_HBData$partFW <- as.numeric(as.character(df_HBData$partFW)) 
-df_HBData$maturepodFW <- as.numeric(as.character(df_HBData$maturepodDW)) 
+df_HBData$maturepodFW <- as.numeric(as.character(df_HBData$maturepodFW)) 
+df_HBData$maturepodDW <- as.numeric(as.character(df_HBData$maturepodDW)) 
 df_LincolnData$maturepodFW <- as.numeric(as.character(df_LincolnData$maturepodDW)) 
 
 
@@ -209,6 +212,68 @@ df_CombinedData  <- bind_rows(df_HBData,df_LincolnData)
 
 head(df_CombinedData)
 
+```
+### Fix up Columns to match Both
+```{r}
+# Sample Fresh Weight
+   # we need to know the Fesh weight of the sample for the measure area.
+df_CombinedData$SampleFW = df_CombinedData$TFW
+
+   # we need to know how much of the partition was used for subsample
+df_CombinedData$PARTFW = df_CombinedData$partFW
+
+
+for (k in 1:length(df_CombinedData$TFW) ) #any column will do for length
+ {
+  #Choose out of FW1 & 2 for HB
+  if (is.na(df_CombinedData$TFW2[k]) == FALSE)
+  {
+    if (is.na(df_CombinedData$TFW[k]) == TRUE)
+      {
+       df_CombinedData$SampleFW[k] = df_CombinedData$TFW2[k] 
+      }
+  }
+  
+  #if final harvest
+  #HB
+  if (isTRUE( df_CombinedData$Final_residueFW[k] > 0) )       
+   {
+   
+    df_CombinedData$PARTFW[k] = ((df_CombinedData$Final_residueFW[k] + df_CombinedData$Final_podFW[k] +df_CombinedData$Final_grainFW[k]))# + df_CombinedData$Final_grainSprouted[k]))
+   }
+  #lincoln
+  if (isTRUE( df_CombinedData$Final_ResidueSubFW[k] > 0) )       
+   {
+   
+    df_CombinedData$PARTFW[k] = ((df_CombinedData$Final_ResidueSubFW[k] + df_CombinedData$FinalPodPeaFW[k]))#+ df_CombinedData$Final_grainSprouted[k]))
+   }
+ 
+}
+
+
+
+#SampleDW
+
+# leaf & stem
+df_CombinedData$SampleLeafDW <- df_CombinedData$greenleafDW
+df_CombinedData$SampleStemDW <- df_CombinedData$greenstemDW
+
+# Dead leaf and Stem
+df_CombinedData$SampleDeadDW <- df_CombinedData$deadFW
+
+for (k in 1:length(df_CombinedData$SampleDeadDW) ) #any column will do for length
+ {
+   if (is.na(df_CombinedData$SampleDeadDW[k]) == TRUE)
+      {
+       df_CombinedData$SampleDeadDW[k] = df_CombinedData$deadstemDW[k] + df_CombinedData$deadleafDW[k]
+      }
+    if (is.na(df_CombinedData$SampleDeadDW[k]) == TRUE)
+      {
+       df_CombinedData$SampleDeadDW[k] = 0
+      }
+   
+
+ }
 ```
 
 
