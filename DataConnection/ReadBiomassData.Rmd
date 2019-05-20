@@ -278,9 +278,9 @@ plot_it<- function(frame=df_CombinedData,var1){
 ```
 look at some data
 ```{r}
-Psum <- plot_it(var1="grainDW")
+Psum <- plot_it(var1="SampleGrainWT")
 
-plot_it(var1="GrainWT")
+#plot_it(var1="GrainWT")
 
 
 Psum
