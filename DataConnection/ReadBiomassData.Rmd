@@ -265,7 +265,47 @@ df_CombinedData <-  df_CombinedData %>%
 
 
 ```
+### we have biomass so cancaluclate N levels
 
+```{r}
+#N content  
+  
+df_CombinedData$N_Content_Green_Leaf[df_CombinedData$N_Content_Green_Leaf == "-"] <- NA 
+
+df_CombinedData$N_Content_Green_Leaf <- as.numeric(as.character(df_CombinedData$N_Content_Green_Leaf)) 
+
+df_CombinedData$N_Content_Green_Stem[df_CombinedData$N_Content_Green_Stem == "-"] <- NA 
+
+df_CombinedData$N_Content_Green_Stem <- as.numeric(as.character(df_CombinedData$N_Content_Green_Stem)) 
+
+df_CombinedData$N_Content_Green_Grain[df_CombinedData$N_Content_Green_Grain == "-"] <- NA 
+df_CombinedData$N_Content_Green_Grain <- as.numeric(as.character(df_CombinedData$N_Content_Green_Grain)) 
+df_CombinedData$N_Content_Mat_Grain[df_CombinedData$N_Content_Mat_Grain == "-"] <- NA 
+df_CombinedData$N_Content_Mat_Grain <- as.numeric(as.character(df_CombinedData$N_Content_Mat_Grain)) 
+
+
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(LeafNConc = N_Content_Green_Leaf/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(leafN = LeafNConc * leafLiveWt )
+   
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(StemNConc = N_Content_Green_Stem/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(StemN = StemNConc *StemLiveWt )
+
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(GrainNConc = N_Content_Green_Grain/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(GrainLiveN = GrainNConc*GrainLiveWt )
+
+  df_CombinedData <-  df_CombinedData %>%
+    mutate(GrainMatureNConc = N_Content_Mat_Grain/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(GrainMatureN = GrainMatureNConc * GrainWt )
+ 
+ 
+```
 
 #Summary mean and se grouped by site, treatment and clock as function
 ```{r, sum_elemant function}
@@ -298,7 +338,7 @@ plot_it<- function(frame=df_CombinedData,var1){
 ```
 look at some data
 ```{r}
-Psum <- plot_it(var1="GrainWt")
+Psum <- plot_it(var1="GrainMatureN")
 
 #plot_it(var1="GrainWT")
 
