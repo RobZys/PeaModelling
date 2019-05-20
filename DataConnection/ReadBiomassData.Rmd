@@ -199,6 +199,29 @@ for (k in 1:length(df_CombinedData$SampleDeadDW) ) #any column will do for lengt
 
 }
 
+# Intermediate Grain 
+df_CombinedData$SampleGWt = df_CombinedData$grainDW
+
+
+for (k in 1:length(df_CombinedData$grainDW) ) #any column will do for length
+ {
+   if (is.na(df_CombinedData$grainDW[k]) ==TRUE)
+   {
+   
+   if (is.na(df_CombinedData$greengrainDW[k]) == FALSE)
+      {
+       df_CombinedData$SampleGWt[k] =  df_CombinedData$greengrainDW[k]
+      }
+
+   #Add mature
+      if (is.na(df_CombinedData$maturegrainDW[k]) == FALSE)
+      {
+       df_CombinedData$SampleGWt[k] = df_CombinedData$SampleGWt[k] + df_CombinedData$maturegrainDW[k]
+      }
+   }
+
+}
+
 #Final grain Wt
 
 df_CombinedData$SampleGrainSprouted <- 0
@@ -213,10 +236,12 @@ for (k in 1:length(df_CombinedData$Final_grainSproutedFW) ) #any column will do 
 df_CombinedData <- df_CombinedData %>%
   mutate(SampleFGW = ((Final_100grainDW*Final_grainFW/Final_100grainFW)+SampleGrainSprouted)) 
 
+df_CombinedData$SampleFGW[is.nan(df_CombinedData$SampleFGW)] <- NA 
+df_CombinedData$SampleFGW[is.na(df_CombinedData$SampleFGW)] <- 0 
 
 #Total grain wt
 
-df_CombinedData <- df_CombinedData %>%  mutate(GrainWT =  maturegrainDW+ grainDW + SampleFGW)
+df_CombinedData <- df_CombinedData %>%  mutate(SampleGrainWT = (SampleFGW+ SampleGWt))
 
 ```
 
@@ -250,7 +275,7 @@ plot_it<- function(frame=df_CombinedData,var1){
   
 }
 
-plot_it(var1="GrainWT")
+plot_it(var1="SampleGrainWT")
 
 ```
 
