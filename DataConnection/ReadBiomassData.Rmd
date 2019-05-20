@@ -213,24 +213,24 @@ sum_it<- function(frame=df_CombinedData,var1 ){
 print(sum_mean)
 }
 
-sum_it(var1 = "SSDW")
-
 
 ```
 
 #sunction to draw line graphs with error bars
 ```{r, graphing function}
 plot_it<- function(frame=df_CombinedData,var1){
-  sum_it(var1 = var1)
+  sum_mean <- sum_it(var1 = var1)
   it_plot <- ggplot(data=sum_mean, aes(x=Date,y=mean, colour=Trt_name, shape=Site))+
     geom_point()+
-    geom_line()
+    geom_line()+ 
+    geom_errorbar(aes(ymin=mean-se,ymax=mean+se))
+  
   it_plot
   
   
 }
 
-plot_it(var1="Stem_area")
+plot_it(var1="SampleFW")
 
 ```
 
