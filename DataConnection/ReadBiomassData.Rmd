@@ -202,3 +202,38 @@ for (k in 1:length(df_CombinedData$SampleDeadDW) ) #any column will do for lengt
 
 
 
+#Summary mean and se grouped by site, treatment and clock as function
+```{r, sum_elemant function}
+
+sum_it<- function(frame=df_CombinedData,var1 ){
+  sum_mean<- df_CombinedData%>% 
+  group_by(Date,Trt_name, Site) %>% 
+  summarise_at(.vars = var1,funs(mean,se=sd(.)/sqrt(n())))
+  
+print(sum_mean)
+}
+
+sum_it(var1 = "SSDW")
+
+
+```
+
+#sunction to draw line graphs with error bars
+```{r, graphing function}
+plot_it<- function(frame=df_CombinedData,var1){
+  sum_it(var1 = var1)
+  it_plot <- ggplot(data=sum_mean, aes(x=Date,y=mean, colour=Trt_name, shape=Site))+
+    geom_point()+
+    geom_line()
+  it_plot
+  
+  
+}
+
+plot_it(var1="Stem_area")
+
+```
+
+
+
+
