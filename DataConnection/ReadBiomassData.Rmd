@@ -271,9 +271,15 @@ for (k in 1:length(df_CombinedData$SampleDeadDW) ) #any column will do for lengt
       {
        df_CombinedData$SampleDeadDW[k] = 0
       }
-   
+ 
 
- }
+}
+
+#Final grain Wt
+
+#df_CombinedData$SampleFGW  
+
+
 ```
 
 
