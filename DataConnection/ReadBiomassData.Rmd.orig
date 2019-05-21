@@ -181,7 +181,6 @@ for (k in 1:length(df_CombinedData$TFW) ) #any column will do for length
 # leaf & stem
 df_CombinedData$SampleLeafDW <- df_CombinedData$greenleafDW
 df_CombinedData$SampleStemDW <- df_CombinedData$greenstemDW
-df_CombinedData$SamplePodDW <- df_CombinedData$greenpodDW
 
 # Dead leaf and Stem
 df_CombinedData$SampleDeadDW <- df_CombinedData$deadFW
@@ -246,66 +245,7 @@ df_CombinedData <- df_CombinedData %>%  mutate(SampleGrainWT = (SampleFGW+ Sampl
 
 ```
 
-# have sample values - need plot values g/m2
-```{r}
 
-df_CombinedData <-  df_CombinedData %>%
-   mutate(perM = (SampleFW/PARTFW/HA)) %>%
-   mutate(partDW = (SampleLeafDW + SampleStemDW + SampleDeadDW  + SamplePodDW + maturepodDW + SampleGrainWT)) %>%
-   mutate(AboveGroundWt = (perM*partDW) )%>%
-  mutate(leafLiveWt = perM*(SampleLeafDW)) %>%
-   mutate(StemLiveWt = perM*(SampleStemDW)) %>%
-  mutate(DeadWt = perM*(SampleDeadDW)) %>%
-   mutate(PodLiveWt = perM*(SamplePodDW)) %>%
-   mutate(GrainWt = perM*(SampleGrainWT)) %>%
-   mutate(GrainLiveWt = perM*(SampleGWt)) %>%
-   mutate(LeafArea = perM*(Leaf_area)) %>%
-   mutate(leafLAI = Leaf_area/leafLiveWt)
-
-
-
-```
-### we have biomass so cancaluclate N levels
-
-```{r}
-#N content  
-  
-df_CombinedData$N_Content_Green_Leaf[df_CombinedData$N_Content_Green_Leaf == "-"] <- NA 
-
-df_CombinedData$N_Content_Green_Leaf <- as.numeric(as.character(df_CombinedData$N_Content_Green_Leaf)) 
-
-df_CombinedData$N_Content_Green_Stem[df_CombinedData$N_Content_Green_Stem == "-"] <- NA 
-
-df_CombinedData$N_Content_Green_Stem <- as.numeric(as.character(df_CombinedData$N_Content_Green_Stem)) 
-
-df_CombinedData$N_Content_Green_Grain[df_CombinedData$N_Content_Green_Grain == "-"] <- NA 
-df_CombinedData$N_Content_Green_Grain <- as.numeric(as.character(df_CombinedData$N_Content_Green_Grain)) 
-df_CombinedData$N_Content_Mat_Grain[df_CombinedData$N_Content_Mat_Grain == "-"] <- NA 
-df_CombinedData$N_Content_Mat_Grain <- as.numeric(as.character(df_CombinedData$N_Content_Mat_Grain)) 
-
-
- df_CombinedData <-  df_CombinedData %>%
-    mutate(LeafNConc = N_Content_Green_Leaf/100.0)
- df_CombinedData <-  df_CombinedData %>%
-    mutate(leafN = LeafNConc * leafLiveWt )
-   
- df_CombinedData <-  df_CombinedData %>%
-    mutate(StemNConc = N_Content_Green_Stem/100.0)
- df_CombinedData <-  df_CombinedData %>%
-    mutate(StemN = StemNConc *StemLiveWt )
-
- df_CombinedData <-  df_CombinedData %>%
-    mutate(GrainNConc = N_Content_Green_Grain/100.0)
- df_CombinedData <-  df_CombinedData %>%
-    mutate(GrainLiveN = GrainNConc*GrainLiveWt )
-
-  df_CombinedData <-  df_CombinedData %>%
-    mutate(GrainMatureNConc = N_Content_Mat_Grain/100.0)
- df_CombinedData <-  df_CombinedData %>%
-    mutate(GrainMatureN = GrainMatureNConc * GrainWt )
- 
- 
-```
 
 #Summary mean and se grouped by site, treatment and clock as function
 ```{r, sum_elemant function}
@@ -323,7 +263,7 @@ sum_it<- function(frame=df_CombinedData,var1 ){
 
 #sunction to draw line graphs with error bars
 ```{r, graphing function}
-plot_it<- function(frame=dataset_name,var1){
+plot_it<- function(frame=df_CombinedData,var1){
   sum_mean <- sum_it(var1 = var1)
   it_plot <- ggplot(data=sum_mean, aes(x=Date,y=mean, colour=Trt_name, shape=Site))+
     geom_point()+
@@ -334,33 +274,22 @@ plot_it<- function(frame=dataset_name,var1){
   it_plot
 }
 
+<<<<<<< HEAD
+plot_it(var1="SampleGrainWT")
+=======
 
 ```
 look at some data
 ```{r}
-Psum <- plot_it(var1="GrainMatureN")
+Psum <- plot_it(var1="grainDW")
 
-#plot_it(var1="GrainWT")
+plot_it(var1="GrainWT")
+>>>>>>> af3c0e48e6df195b712a7348c1cfd32786043041
 
 
 Psum
 ```
 
-```{r}
-#save consist data for report and analysis
-
-# gather all variable in one column and values..
-#  dataset_name <- "Pea_Biomass_N_LAI" # needed to name the outputfiles consistently (labels, consistent and apsim .txt)
-# # 
-#  SourceRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
-#  DestRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
-# # 
-#  cd_Path <- paste0(DestRootDir, "ObservedData_",dataset_name,".txt")
-# # 
-#  write.table(df_CombinedData,cd_Path , row.names = F, quote = F, sep = '\t')
-# #print(cd_Path)
-
-```
 
 
 
