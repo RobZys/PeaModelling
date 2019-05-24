@@ -69,6 +69,9 @@ df_RAW_HB$Index  <- NULL
 df_RAW_Lincoln$Index  <- NULL
 #name contains &
 names(df_RAW_Lincoln)[38] <- "FinalPodPeaFW"
+#set column as numeric
+df_RAW_HB$partFW <- as.numeric(as.character(df_RAW_HB$partFW)) 
+
 
 ```
 
@@ -347,18 +350,18 @@ Psum
 ```
 
 ```{r}
-#save consist data for report and analysis
-
-# gather all variable in one column and values..
-#  dataset_name <- "Pea_Biomass_N_LAI" # needed to name the outputfiles consistently (labels, consistent and apsim .txt)
-# # 
+ #save consist data for report and analysis
+ 
+# # gather all variable in one column and values..
+#dataset_name <- "Pea_Biomass_N_LAI" # needed to name the outputfiles consistently (labels, consistent and apsim .txt)
+# # # 
 #  SourceRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
 #  DestRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
-# # 
+# # # 
 #  cd_Path <- paste0(DestRootDir, "ObservedData_",dataset_name,".txt")
-# # 
+# # # 
 #  write.table(df_CombinedData,cd_Path , row.names = F, quote = F, sep = '\t')
-# #print(cd_Path)
+# # #print(cd_Path)
 
 ```
 
