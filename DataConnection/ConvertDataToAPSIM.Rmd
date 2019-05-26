@@ -64,6 +64,8 @@ VariableList <- c("Site","Date","Trt_name","Trt_num","LeafArea","Stem_area","Pod
 
 df_ReqData <- df_DataSum[,VariableList]
 
+df_ReqData [is.numeric(df_ReqData) & is.na(df_ReqData)] <- "*"
+
 ```
 
 ### now save in a form for apsim
