@@ -1,4 +1,4 @@
-Site	Clock.Today	SimulationNnme	Cult	Sow	Nit	AboveGroundWt	Leaf.Live.Wt	Stem.Live.Wt	Dead.Wt	Pod.Live.Wt	GrainWt	Grain.Live.Wt	Leaf.NConc	leaf.N	Stem.N.Conc	Stem.N	Grain.NConc
+Location	Clock.Today()	SimulationName	Cult	Sow	Nit	AboveGroundWt	Leaf.Live.Wt	Stem.Live.Wt	Dead.Wt	Pod.Live.Wt	GrainWt	Grain.Live.Wt	Leaf.NConc	leaf.N	Stem.N.Conc	Stem.N	Grain.NConc
 ()	()	()	()	()	()	()	()	()	()	()	()	()	()	()	()	()	()
 HawkesBay	2018-11-07	HawkesBayCultASowEarlyNitNil	A	Early	Nil	*	47.8956563	35.55563272	0	*	*	*	0.049845	2.398076088	0.0364975	1.322128374	*
 HawkesBay	2018-11-07	HawkesBayCultBSowEarlyNitNil	B	Early	Nil	*	83.83198574	122.5193928	0	*	*	*	0.0475475	3.985458257	0.036725	4.491148761	*
