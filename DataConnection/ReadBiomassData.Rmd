@@ -2,10 +2,7 @@
 title: "Transforming Pea data into observed data for sims discovery science"
 author: "R Zyskowski , Adrain Hunt"
 date: "`r Sys.Date()`"
-output:
-  github_document:
-    toc: yes
-  html_document: default
+output: html_document
     
 ---
 
@@ -15,7 +12,7 @@ Key processes:
 
 - Reads  *Technically correct* data into `data.frame`
 
-- Combines the Lincoln & Hawkes bay data
+- Combines the Lincoln & Hawke's bay data
 
 
 #### Data management
@@ -321,7 +318,7 @@ sum_it<- function(frame=df_CombinedData,var1 ){
 
 ```
 
-#sunction to draw line graphs with error bars
+#function to draw line graphs with error bars
 ```{r, graphing function}
 plot_it<- function(frame=df_CombinedData,var1){
   sum_mean <- sum_it(var1 = var1)
@@ -338,7 +335,7 @@ plot_it<- function(frame=df_CombinedData,var1){
 ```
 look at some data
 ```{r}
-Psum <- plot_it(var1="GrainMatureN")
+Psum <- plot_it(var1="leafN")
 
 #plot_it(var1="GrainWT")
 
