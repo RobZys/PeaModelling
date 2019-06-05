@@ -2,8 +2,9 @@
 title: "Transforming Pea data into observed data for sims discovery science"
 author: "R Zyskowski , Adrain Hunt"
 date: "`r Sys.Date()`"
-output: html_document
-    
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ## Step one read data from Excel File
@@ -340,10 +341,21 @@ look at some data
 ```{r}
 Psum <- plot_it(var1="leafN")
 
-#plot_it(var1="GrainWT")
+plot_it(var1="GrainWt")
 
 
 Psum
+plot_it(var1="StemN")
+
+plot_it(var1="GrainLiveN")
+
+plot_it(var1="GrainMatureN")
+
+Plot.LeafNConc <- plot_it(var1="LeafNConc")
+
+Plot.LeafNConc+ylab("Leaf dry weith (g N/g DW)")
+
+
 ```
 
 ```{r}
