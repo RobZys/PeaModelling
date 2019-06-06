@@ -228,6 +228,11 @@ for (k in 1:length(df_CombinedData$grainDW) ) #any column will do for length
 
 #Final grain Wt
 
+ df_CombinedData$Final_grainSproutedDW[is.na(df_CombinedData$Final_grainSproutedDW)] <- 0 
+ df_CombinedData$Final_grainFW[is.na(df_CombinedData$Final_grainFW)] <- 0
+ df_CombinedData$grainDW[is.na(df_CombinedData$grainDW)] <- 0
+
+
 df_CombinedData$SampleGrainSprouted <- 0
 for (k in 1:length(df_CombinedData$Final_grainSproutedFW) ) #any column will do for length
  {
@@ -243,6 +248,9 @@ df_CombinedData <- df_CombinedData %>%
 df_CombinedData$SampleFGW[is.nan(df_CombinedData$SampleFGW)] <- NA 
 df_CombinedData$SampleFGW[is.na(df_CombinedData$SampleFGW)] <- 0 
 
+df_CombinedData$SampleGWt[is.nan(df_CombinedData$SampleGWt)] <- NA 
+df_CombinedData$SampleGWt[is.na(df_CombinedData$SampleGWt)] <- 0 
+
 #Total grain wt
 
 df_CombinedData <- df_CombinedData %>%  mutate(SampleGrainWT = (SampleFGW+ SampleGWt))
@@ -253,7 +261,8 @@ df_CombinedData <- df_CombinedData %>%  mutate(SampleGrainWT = (SampleFGW+ Sampl
 ```{r}
 
 df_CombinedData <-  df_CombinedData %>%
-   mutate(perM = (SampleFW/PARTFW/HA)) %>%
+   mutate(PC = (SampleFW/PARTFW)) %>%
+   mutate(perM = (PC/HA)) %>%
    mutate(partDW = (SampleLeafDW + SampleStemDW + SampleDeadDW  + SamplePodDW + maturepodDW + SampleGrainWT)) %>%
    mutate(AboveGroundWt = (perM*partDW) )%>%
   mutate(leafLiveWt = perM*(SampleLeafDW)) %>%
@@ -263,7 +272,7 @@ df_CombinedData <-  df_CombinedData %>%
    mutate(GrainWt = perM*(SampleGrainWT)) %>%
    mutate(GrainLiveWt = perM*(SampleGWt)) %>%
    mutate(LeafArea = perM*(Leaf_area)) %>%
-   mutate(leafLAI = Leaf_area/leafLiveWt)
+   mutate(leafLAI = (Leaf_area/leafLiveWt))
 
 
 
@@ -341,7 +350,7 @@ plot_it<- function(frame=dataset_name,var1){
 ```
 look at some data
 ```{r}
-Psum <- plot_it(var1="GrainMatureN")
+Psum <- plot_it(var1="GrainWt")
 
 #plot_it(var1="GrainWT")
 
