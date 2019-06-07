@@ -233,25 +233,48 @@ for (k in 1:length(df_CombinedData$grainDW) ) #any column will do for length
  df_CombinedData$grainDW[is.na(df_CombinedData$grainDW)] <- 0
 
 
-df_CombinedData$SampleGrainSprouted <- 0
-for (k in 1:length(df_CombinedData$Final_grainSproutedFW) ) #any column will do for length
- {
-  if (is.na(df_CombinedData$Final_grainSproutedFW[k]) == FALSE)
-      {
-       df_CombinedData$SampleGrainSprouted[k] = df_CombinedData$Final_grainSproutedDW[k] * df_CombinedData$Final_grainFW[k]/df_CombinedData$Final_grainSproutedFW[k]
-      }
-
-  }
-df_CombinedData <- df_CombinedData %>%
-  mutate(SampleFGW = ((Final_100grainDW*Final_grainFW/Final_100grainFW)))#+SampleGrainSprouted)) 
-
-df_CombinedData$SampleFGW[is.nan(df_CombinedData$SampleFGW)] <- NA 
-df_CombinedData$SampleFGW[is.na(df_CombinedData$SampleFGW)] <- 0 
-
-df_CombinedData$SampleGWt[is.nan(df_CombinedData$SampleGWt)] <- NA 
-df_CombinedData$SampleGWt[is.na(df_CombinedData$SampleGWt)] <- 0 
+# df_CombinedData$SampleGrainSprouted <- 0
+# for (k in 1:length(df_CombinedData$Final_grainSproutedFW) ) #any column will do for length
+#  {
+#   if (is.na(df_CombinedData$Final_grainSproutedFW[k]) == FALSE)
+#       {
+#        df_CombinedData$SampleGrainSprouted[k] = df_CombinedData$Final_grainSproutedDW[k] * df_CombinedData$Final_grainFW[k]/df_CombinedData$Final_grainSproutedFW[k]
+#       }
+# 
+#   }
+# df_CombinedData <- df_CombinedData %>%
+#   mutate(SampleFGW = ((Final_100grainDW*Final_grainFW/Final_100grainFW)))#+SampleGrainSprouted)) 
+# 
+# df_CombinedData$SampleFGW[is.nan(df_CombinedData$SampleFGW)] <- NA 
+# df_CombinedData$SampleFGW[is.na(df_CombinedData$SampleFGW)] <- 0 
+# 
+# df_CombinedData$SampleGWt[is.nan(df_CombinedData$SampleGWt)] <- NA 
+# df_CombinedData$SampleGWt[is.na(df_CombinedData$SampleGWt)] <- 0 
 
 #Total grain wt
+ 
+# let try it the % way
+ 
+#% of grain that is spouted
+df_CombinedData <-  df_CombinedData %>%
+   mutate(SpoutedPC = (Final_grainSprouted/Final_GrainCount)) 
+ 
+ df_CombinedData$SpoutedPC[is.na(df_CombinedData$SpoutedPC)] <- 0 
+ 
+ df_CombinedData <- df_CombinedData %>%
+   mutate(SampleAveWt = ((Final_100grainDW)/100))  # What is the non sprouted average weight
+ 
+ 
+df_CombinedData <- df_CombinedData %>%
+   mutate(SampleFGW = SampleAveWt * Final_GrainCount)  # What is sample total
+ 
+ 
+ 
+ df_CombinedData$SampleGWt[is.nan(df_CombinedData$SampleGWt)] <- NA 
+ df_CombinedData$SampleGWt[is.na(df_CombinedData$SampleGWt)] <- 0
+
+df_CombinedData$SampleFGW[is.nan(df_CombinedData$SampleFGW)] <- NA 
+ df_CombinedData$SampleFGW[is.na(df_CombinedData$SampleFGW)] <- 0
 
 df_CombinedData <- df_CombinedData %>%  mutate(SampleGrainWT = (SampleFGW+ SampleGWt))
 
@@ -317,6 +340,21 @@ df_CombinedData$N_Content_Mat_Grain <- as.numeric(as.character(df_CombinedData$N
     mutate(GrainMatureN = GrainMatureNConc * GrainWt )
  
  
+```
+# For testing purposes lets group the midnatch days at HB
+```{r}
+for (k in 1:length(df_CombinedData$Date) ) 
+ {
+   tmp <- df_CombinedData$Date[k] 
+  if (isTRUE( tmp == as.Date("2019-01-25") ))       
+#   if (tmp = "2019-01-25")  
+   {
+    df_CombinedData$Date[k] <- as.Date("2019-01-23")
+   }
+
+}
+
+
 ```
 
 #Summary mean and se grouped by site, treatment and clock as function
