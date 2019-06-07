@@ -282,7 +282,7 @@ df_CombinedData <- df_CombinedData %>%  mutate(SampleGrainWT = (SampleFGW+ Sampl
 
 # have sample values - need plot values g/m2
 ```{r}
-
+# Biomass
 df_CombinedData <-  df_CombinedData %>%
    mutate(PC = (SampleFW/PARTFW)) %>%
    mutate(perM = (PC/HA)) %>%
@@ -293,10 +293,23 @@ df_CombinedData <-  df_CombinedData %>%
   mutate(DeadWt = perM*(SampleDeadDW)) %>%
    mutate(PodLiveWt = perM*(SamplePodDW)) %>%
    mutate(GrainWt = (SampleGrainWT)/HA) %>%  #already done the PARTFW in above
-   mutate(GrainLiveWt = perM*(SampleGWt)) %>%
-   mutate(LeafArea = perM*(Leaf_area)) %>%
-   mutate(leafLAI = (Leaf_area/leafLiveWt))
+   mutate(GrainLiveWt = perM*(SampleGWt)) 
+   
 
+# Green area
+
+ df_CombinedData$SampleFGW[is.na(df_CombinedData$Leaf_area)] <- 0
+ df_CombinedData$SampleFGW[is.na(df_CombinedData$Stem_area)] <- 0
+ df_CombinedData$SampleFGW[is.na(df_CombinedData$Pod_area)] <- 0
+
+ df_CombinedData <-  df_CombinedData %>%
+   mutate(LeafArea = perM*(Leaf_area)) %>%  #cm2
+   mutate(leafLAI = (LeafArea/10000)) %>% #m
+   mutate(StemArea = perM*(Stem_area)) %>%  #cm2
+   mutate(stemGAI = (StemArea/10000)) %>% #m
+   mutate(PodArea = perM*(Pod_area)) %>%  #cm2
+   mutate(podGAI = (PodArea/10000)) %>% #m
+   mutate(GAI = (leafLAI + stemGAI+podGAI)) #m/m
 
 
 ```
@@ -388,7 +401,7 @@ plot_it<- function(frame=dataset_name,var1){
 ```
 look at some data
 ```{r}
-Psum <- plot_it(var1="GrainWt")
+Psum <- plot_it(var1="LeafLAI")
 
 #plot_it(var1="GrainWT")
 
