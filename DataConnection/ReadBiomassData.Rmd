@@ -226,6 +226,15 @@ for (k in 1:length(df_CombinedData$grainDW) ) #any column will do for length
 
 }
 
+
+#Total Pod/shell weight
+ df_CombinedData$maturepodFW[is.na(df_CombinedData$maturepodFW)] <- 0
+ df_CombinedData$maturepodDW[is.na(df_CombinedData$maturepodDW)] <- 0
+
+ df_CombinedData <-  df_CombinedData %>%
+   mutate(SampleShellWt = (greenpodDW+maturepodDW)) 
+
+
 #Final grain Wt
 
  df_CombinedData$Final_grainSproutedDW[is.na(df_CombinedData$Final_grainSproutedDW)] <- 0 
@@ -292,6 +301,7 @@ df_CombinedData <-  df_CombinedData %>%
    mutate(StemLiveWt = perM*(SampleStemDW)) %>%
   mutate(DeadWt = perM*(SampleDeadDW)) %>%
    mutate(PodLiveWt = perM*(SamplePodDW)) %>%
+   mutate(ShellWt = perM*(SampleShellWt)) %>%
    mutate(GrainWt = (SampleGrainWT)/HA) %>%  #already done the PARTFW in above
    mutate(GrainLiveWt = perM*(SampleGWt)) 
    
@@ -331,6 +341,11 @@ df_CombinedData$N_Content_Green_Grain <- as.numeric(as.character(df_CombinedData
 df_CombinedData$N_Content_Mat_Grain[df_CombinedData$N_Content_Mat_Grain == "-"] <- NA 
 df_CombinedData$N_Content_Mat_Grain <- as.numeric(as.character(df_CombinedData$N_Content_Mat_Grain)) 
 
+df_CombinedData$N_Content_Mat_Pod[df_CombinedData$N_Content_Mat_Grain == "-"] <- NA 
+df_CombinedData$N_Content_Mat_Pod <- as.numeric(as.character(df_CombinedData$N_Content_Mat_Pod)) 
+
+df_CombinedData$N_Content_Green_Pod[df_CombinedData$N_Content_Mat_Grain == "-"] <- NA 
+df_CombinedData$N_Content_Green_Pod <- as.numeric(as.character(df_CombinedData$N_Content_Green_Pod)) 
 
  df_CombinedData <-  df_CombinedData %>%
     mutate(LeafNConc = N_Content_Green_Leaf/100.0)
@@ -352,6 +367,16 @@ df_CombinedData$N_Content_Mat_Grain <- as.numeric(as.character(df_CombinedData$N
  df_CombinedData <-  df_CombinedData %>%
     mutate(GrainMatureN = GrainMatureNConc * GrainWt )
  
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(PodNConc = N_Content_Green_Pod/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(PodLiveN = PodNConc*PodLiveWt )
+
+  df_CombinedData <-  df_CombinedData %>%
+    mutate(PodMatureNConc = N_Content_Mat_Pod/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(PodMatureN = PodMatureNConc * ShellWt )
+
  
 ```
 # For testing purposes lets group the midnatch days at HB
@@ -401,7 +426,7 @@ plot_it<- function(frame=dataset_name,var1){
 ```
 look at some data
 ```{r}
-Psum <- plot_it(var1="LeafLAI")
+Psum <- plot_it(var1="ShellWt")
 
 #plot_it(var1="GrainWT")
 
@@ -413,14 +438,14 @@ Psum
  #save consist data for report and analysis
  
 # # gather all variable in one column and values..
-#dataset_name <- "Pea_Biomass_N_LAI" # needed to name the outputfiles consistently (labels, consistent and apsim .txt)
+dataset_name <- "Pea_Biomass_N_LAI" # needed to name the outputfiles consistently (labels, consistent and apsim .txt)
 # # # 
-#  SourceRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
-#  DestRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
+  SourceRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
+  DestRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
 # # # 
-#  cd_Path <- paste0(DestRootDir, "ObservedData_",dataset_name,".txt")
+  cd_Path <- paste0(DestRootDir, "ObservedData_",dataset_name,".txt")
 # # # 
-#  write.table(df_CombinedData,cd_Path , row.names = F, quote = F, sep = '\t')
+  write.table(df_CombinedData,cd_Path , row.names = F, quote = F, sep = '\t')
 # # #print(cd_Path)
 
 ```
