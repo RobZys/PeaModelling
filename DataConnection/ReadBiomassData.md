@@ -1,7 +1,7 @@
 Transforming Pea data into observed data for sims discovery science
 ================
 R Zyskowski , Adrain Hunt
-2019-05-21
+2019-05-30
 
   - [Step one read data from Excel
     File](#step-one-read-data-from-excel-file)
@@ -24,7 +24,7 @@ Key processes:
 
   - Reads *Technically correct* data into `data.frame`
 
-  - Combines the Lincoln & Hawkes bay data
+  - Combines the Lincoln & Hawke’s bay data
 
 #### Data management
 
@@ -77,6 +77,15 @@ library(plyr);library(dplyr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+```
+
+    ## Registered S3 methods overwritten by 'ggplot2':
+    ##   method         from 
+    ##   [.quosures     rlang
+    ##   c.quosures     rlang
+    ##   print.quosures rlang
+
+``` r
 library(magrittr) #required to use the pipe (%>%) operator
 ```
 
@@ -92,13 +101,17 @@ library(readxl)
 library(tidyverse)
 ```
 
-    ## -- Attaching packages --------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+    ## Registered S3 method overwritten by 'rvest':
+    ##   method            from
+    ##   read_xml.response xml2
 
-    ## v tibble  1.4.2     v purrr   0.2.5
-    ## v readr   1.1.1     v stringr 1.3.1
-    ## v tibble  1.4.2     v forcats 0.3.0
+    ## -- Attaching packages ------------------------------------------------------------------------------------------------------------------ tidyverse 1.2.1 --
 
-    ## -- Conflicts ------------------------------------------------------------------------------------------------------ tidyverse_conflicts() --
+    ## v tibble  2.1.1     v purrr   0.3.2
+    ## v readr   1.3.1     v stringr 1.4.0
+    ## v tibble  2.1.1     v forcats 0.4.0
+
+    ## -- Conflicts --------------------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
     ## x dplyr::arrange()         masks plyr::arrange()
     ## x lubridate::as.difftime() masks base::as.difftime()
     ## x purrr::compact()         masks plyr::compact()
@@ -135,6 +148,11 @@ Source_Linc = "RAW_Lincoln"
 source(file = "../IplantScrape.r") #source scraper function 
 
 df_RAW_Lincoln<- scrape_xl(url, sheet = Source_Linc, skip = 2)
+```
+
+    ## Please enter password in TK window (Alt+Tab)
+
+``` r
 df_RAW_HB<- scrape_xl(url, sheet =  Source_HB, skip = 2)
 
 
@@ -484,18 +502,18 @@ na.omit(df_LincolnData)
 ```
 
     ## # A tibble: 160 x 56
-    ##    Date                Event        Plot Block Trt_num Trt_name Cultivar
-    ##    <dttm>              <chr>       <dbl> <dbl>   <dbl> <chr>    <chr>   
-    ##  1 2018-11-12 00:00:00 Intermed_H1     2     1       2 CB_E_0N  Cult B  
-    ##  2 2018-11-12 00:00:00 Intermed_H1     4     1       3 CB_E_EN  Cult B  
-    ##  3 2018-11-12 00:00:00 Intermed_H1     5     1       4 CB_E_LN  Cult B  
-    ##  4 2018-11-12 00:00:00 Intermed_H1     6     1       1 CA_E_0N  Cult A  
-    ##  5 2018-11-12 00:00:00 Intermed_H1     7     2       4 CB_E_LN  Cult B  
-    ##  6 2018-11-12 00:00:00 Intermed_H1     8     2       3 CB_E_EN  Cult B  
-    ##  7 2018-11-12 00:00:00 Intermed_H1     9     2       2 CB_E_0N  Cult B  
-    ##  8 2018-11-12 00:00:00 Intermed_H1    11     2       1 CA_E_0N  Cult A  
-    ##  9 2018-11-12 00:00:00 Intermed_H1    14     3       2 CB_E_0N  Cult B  
-    ## 10 2018-11-12 00:00:00 Intermed_H1    15     3       4 CB_E_LN  Cult B  
+    ##    Date                Event  Plot Block Trt_num Trt_name Cultivar
+    ##    <dttm>              <chr> <dbl> <dbl>   <dbl> <chr>    <chr>   
+    ##  1 2018-11-12 00:00:00 Inte~     2     1       2 CB_E_0N  Cult B  
+    ##  2 2018-11-12 00:00:00 Inte~     4     1       3 CB_E_EN  Cult B  
+    ##  3 2018-11-12 00:00:00 Inte~     5     1       4 CB_E_LN  Cult B  
+    ##  4 2018-11-12 00:00:00 Inte~     6     1       1 CA_E_0N  Cult A  
+    ##  5 2018-11-12 00:00:00 Inte~     7     2       4 CB_E_LN  Cult B  
+    ##  6 2018-11-12 00:00:00 Inte~     8     2       3 CB_E_EN  Cult B  
+    ##  7 2018-11-12 00:00:00 Inte~     9     2       2 CB_E_0N  Cult B  
+    ##  8 2018-11-12 00:00:00 Inte~    11     2       1 CA_E_0N  Cult A  
+    ##  9 2018-11-12 00:00:00 Inte~    14     3       2 CB_E_0N  Cult B  
+    ## 10 2018-11-12 00:00:00 Inte~    15     3       4 CB_E_LN  Cult B  
     ## # ... with 150 more rows, and 49 more variables: Sowing_Date <chr>,
     ## #   N_timing <chr>, HA <dbl>, PP <dbl>, TFW <dbl>, SSFW <dbl>, SSDW <dbl>,
     ## #   partFW <dbl>, greenleafFW <dbl>, greenstemFW <dbl>, deadstemFW <dbl>,
@@ -688,11 +706,7 @@ for (k in 1:length(df_CombinedData$Final_grainSproutedFW) ) #any column will do 
   }
 df_CombinedData <- df_CombinedData %>%
   mutate(SampleFGW = ((Final_100grainDW*Final_grainFW/Final_100grainFW)+SampleGrainSprouted)) 
-```
 
-    ## Warning: package 'bindrcpp' was built under R version 3.4.4
-
-``` r
 df_CombinedData$SampleFGW[is.nan(df_CombinedData$SampleFGW)] <- NA 
 df_CombinedData$SampleFGW[is.na(df_CombinedData$SampleFGW)] <- 0 
 
@@ -770,7 +784,7 @@ sum_it<- function(frame=df_CombinedData,var1 ){
 }
 ```
 
-\#sunction to draw line graphs with error bars
+\#function to draw line graphs with error bars
 
 ``` r
 plot_it<- function(frame=df_CombinedData,var1){
@@ -788,18 +802,30 @@ plot_it<- function(frame=df_CombinedData,var1){
 look at some data
 
 ``` r
-Psum <- plot_it(var1="GrainMatureN")
+Psum <- plot_it(var1="leafN")
+```
 
+    ## Warning: funs() is soft deprecated as of dplyr 0.8.0
+    ## please use list() instead
+    ## 
+    ## # Before:
+    ## funs(name = f(.)
+    ## 
+    ## # After: 
+    ## list(name = ~f(.))
+    ## This warning is displayed once per session.
+
+``` r
 #plot_it(var1="GrainWT")
 
 
 Psum
 ```
 
-    ## Warning: Removed 64 rows containing missing values (geom_point).
+    ## Warning: Removed 36 rows containing missing values (geom_point).
 
-    ## Warning: Removed 64 rows containing missing values (geom_path).
+    ## Warning: Removed 35 rows containing missing values (geom_path).
 
-    ## Warning: Removed 64 rows containing missing values (geom_errorbar).
+    ## Warning: Removed 36 rows containing missing values (geom_errorbar).
 
 ![](ReadBiomassData_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
