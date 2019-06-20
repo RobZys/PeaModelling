@@ -5072,19 +5072,49 @@
                   "Name": "DMDemands",
                   "Children": [
                     {
-                      "$type": "Models.Functions.MultiplyFunction, Models",
+                      "$type": "Models.Functions.PhaseLookup, Models",
                       "Name": "Structural",
                       "Children": [
                         {
-                          "$type": "Models.Functions.DemandFunctions.InternodeDemandFunction, Models",
-                          "Name": "DMDemandFunction",
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "Emergence",
+                          "End": "EndFlowering",
+                          "Name": "Vegetative",
                           "Children": [
                             {
-                              "$type": "Models.Functions.Constant, Models",
-                              "FixedValue": 0.3,
-                              "Units": null,
-                              "Name": "InterNodeWt",
-                              "Children": [],
+                              "$type": "Models.Functions.MultiplyFunction, Models",
+                              "Name": "Structural",
+                              "Children": [
+                                {
+                                  "$type": "Models.Functions.DemandFunctions.InternodeDemandFunction, Models",
+                                  "Name": "DMDemandFunction",
+                                  "Children": [
+                                    {
+                                      "$type": "Models.Functions.Constant, Models",
+                                      "FixedValue": 0.3,
+                                      "Units": null,
+                                      "Name": "InterNodeWt",
+                                      "Children": [],
+                                      "IncludeInDocumentation": true,
+                                      "Enabled": true,
+                                      "ReadOnly": false
+                                    }
+                                  ],
+                                  "IncludeInDocumentation": true,
+                                  "Enabled": true,
+                                  "ReadOnly": false
+                                },
+                                {
+                                  "$type": "Models.Functions.Constant, Models",
+                                  "FixedValue": 0.7,
+                                  "Units": null,
+                                  "Name": "StructuralFraction",
+                                  "Children": [],
+                                  "IncludeInDocumentation": true,
+                                  "Enabled": true,
+                                  "ReadOnly": false
+                                }
+                              ],
                               "IncludeInDocumentation": true,
                               "Enabled": true,
                               "ReadOnly": false
@@ -5095,42 +5125,16 @@
                           "ReadOnly": false
                         },
                         {
-                          "$type": "Models.Functions.Constant, Models",
-                          "FixedValue": 0.7,
-                          "Units": null,
-                          "Name": "StructuralFraction",
-                          "Children": [],
-                          "IncludeInDocumentation": true,
-                          "Enabled": true,
-                          "ReadOnly": false
-                        }
-                      ],
-                      "IncludeInDocumentation": true,
-                      "Enabled": true,
-                      "ReadOnly": false
-                    },
-                    {
-                      "$type": "Models.Functions.DemandFunctions.StorageDMDemandFunction, Models",
-                      "Name": "Storage",
-                      "Children": [
-                        {
-                          "$type": "Models.Functions.SubtractFunction, Models",
-                          "Name": "StorageFraction",
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "EndFlowering",
+                          "End": "HarvestRipe",
+                          "Name": "Reproductive",
                           "Children": [
                             {
                               "$type": "Models.Functions.Constant, Models",
-                              "FixedValue": 0.7,
+                              "FixedValue": 0.4,
                               "Units": null,
-                              "Name": "One",
-                              "Children": [],
-                              "IncludeInDocumentation": true,
-                              "Enabled": true,
-                              "ReadOnly": false
-                            },
-                            {
-                              "$type": "Models.Functions.VariableReference, Models",
-                              "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
-                              "Name": "StructuralFraction",
+                              "Name": "Zero",
                               "Children": [],
                               "IncludeInDocumentation": true,
                               "Enabled": true,
@@ -5147,27 +5151,146 @@
                       "ReadOnly": false
                     },
                     {
-                      "$type": "Models.Functions.DemandFunctions.StorageDMDemandFunction, Models",
-                      "Name": "Metabolic",
+                      "$type": "Models.Functions.PhaseLookup, Models",
+                      "Name": "Storage",
                       "Children": [
                         {
-                          "$type": "Models.Functions.SubtractFunction, Models",
-                          "Name": "StorageFraction",
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "Emergence",
+                          "End": "EndFlowering",
+                          "Name": "Vegetative",
+                          "Children": [
+                            {
+                              "$type": "Models.Functions.DemandFunctions.StorageDMDemandFunction, Models",
+                              "Name": "Storage",
+                              "Children": [
+                                {
+                                  "$type": "Models.Functions.SubtractFunction, Models",
+                                  "Name": "StorageFraction",
+                                  "Children": [
+                                    {
+                                      "$type": "Models.Functions.Constant, Models",
+                                      "FixedValue": 0.7,
+                                      "Units": null,
+                                      "Name": "One",
+                                      "Children": [],
+                                      "IncludeInDocumentation": true,
+                                      "Enabled": true,
+                                      "ReadOnly": false
+                                    },
+                                    {
+                                      "$type": "Models.Functions.VariableReference, Models",
+                                      "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
+                                      "Name": "StructuralFraction",
+                                      "Children": [],
+                                      "IncludeInDocumentation": true,
+                                      "Enabled": true,
+                                      "ReadOnly": false
+                                    }
+                                  ],
+                                  "IncludeInDocumentation": true,
+                                  "Enabled": true,
+                                  "ReadOnly": false
+                                }
+                              ],
+                              "IncludeInDocumentation": true,
+                              "Enabled": true,
+                              "ReadOnly": false
+                            }
+                          ],
+                          "IncludeInDocumentation": true,
+                          "Enabled": true,
+                          "ReadOnly": false
+                        },
+                        {
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "EndFlowering",
+                          "End": "HarvestRipe",
+                          "Name": "Reproductive",
                           "Children": [
                             {
                               "$type": "Models.Functions.Constant, Models",
-                              "FixedValue": 1.0,
+                              "FixedValue": 0.4,
                               "Units": null,
-                              "Name": "One",
+                              "Name": "Zero",
                               "Children": [],
                               "IncludeInDocumentation": true,
                               "Enabled": true,
                               "ReadOnly": false
-                            },
+                            }
+                          ],
+                          "IncludeInDocumentation": true,
+                          "Enabled": true,
+                          "ReadOnly": false
+                        }
+                      ],
+                      "IncludeInDocumentation": true,
+                      "Enabled": true,
+                      "ReadOnly": false
+                    },
+                    {
+                      "$type": "Models.Functions.PhaseLookup, Models",
+                      "Name": "Metabolic",
+                      "Children": [
+                        {
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "Emergence",
+                          "End": "EndFlowering",
+                          "Name": "Vegetative",
+                          "Children": [
                             {
-                              "$type": "Models.Functions.VariableReference, Models",
-                              "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
-                              "Name": "StructuralFraction",
+                              "$type": "Models.Functions.DemandFunctions.StorageDMDemandFunction, Models",
+                              "Name": "Metabolic",
+                              "Children": [
+                                {
+                                  "$type": "Models.Functions.SubtractFunction, Models",
+                                  "Name": "StorageFraction",
+                                  "Children": [
+                                    {
+                                      "$type": "Models.Functions.Constant, Models",
+                                      "FixedValue": 1.0,
+                                      "Units": null,
+                                      "Name": "One",
+                                      "Children": [],
+                                      "IncludeInDocumentation": true,
+                                      "Enabled": true,
+                                      "ReadOnly": false
+                                    },
+                                    {
+                                      "$type": "Models.Functions.VariableReference, Models",
+                                      "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
+                                      "Name": "StructuralFraction",
+                                      "Children": [],
+                                      "IncludeInDocumentation": true,
+                                      "Enabled": true,
+                                      "ReadOnly": false
+                                    }
+                                  ],
+                                  "IncludeInDocumentation": true,
+                                  "Enabled": true,
+                                  "ReadOnly": false
+                                }
+                              ],
+                              "IncludeInDocumentation": true,
+                              "Enabled": true,
+                              "ReadOnly": false
+                            }
+                          ],
+                          "IncludeInDocumentation": true,
+                          "Enabled": true,
+                          "ReadOnly": false
+                        },
+                        {
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "EndFlowering",
+                          "End": "HarvestRipe",
+                          "Name": "Reproductive",
+                          "Children": [
+                            {
+                              "$type": "Models.Functions.Constant, Models",
+                              "FixedValue": 0.4,
+                              "Units": null,
+                              "Name": "Zero",
                               "Children": [],
                               "IncludeInDocumentation": true,
                               "Enabled": true,
@@ -5733,7 +5856,7 @@
             {
               "$type": "Models.PMF.Cultivar, Models",
               "Command": [
-                "[Stem].DMDemands.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.25",
+                "[Stem].DMDemands.Structural.Vegetative.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.25",
                 "[Phenology].GrainFilling.Target.FixedValue = 750"
               ],
               "Name": "A_green",
@@ -5745,7 +5868,7 @@
             {
               "$type": "Models.PMF.Cultivar, Models",
               "Command": [
-                "[Stem].DMDemands.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.2",
+                "[Stem].DMDemands.Structural.Vegetative.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.2",
                 "[Phenology].GrainFilling.Target.FixedValue = 1000"
               ],
               "Name": "B_yellow",
@@ -9678,7 +9801,16 @@
     },
     {
       "$type": "Models.Factorial.Experiment, Models",
-      "DisabledSimNames": [],
+      "DisabledSimNames": [
+        "HawkesBayCultASowLateNitLate",
+        "HawkesBayCultASowMidNitLate",
+        "HawkesBayCultASowEarlyNitLate",
+        "HawkesBayCultASowLateNitEarly",
+        "HawkesBayCultASowMidNitEarly",
+        "HawkesBayCultASowEarlyNitEarly",
+        "HawkesBayCultASowLateNitNil",
+        "HawkesBayCultASowMidNitNil"
+      ],
       "Name": "HawkesBay",
       "Children": [
         {
@@ -11238,7 +11370,7 @@
                   "LineThickness": 0,
                   "Checkpoint": "Current",
                   "TableName": "Observed",
-                  "XFieldName": "Clock.Today()",
+                  "XFieldName": "Clock.Today",
                   "YFieldName": "Stem.Live.Wt",
                   "X2FieldName": null,
                   "Y2FieldName": null,
