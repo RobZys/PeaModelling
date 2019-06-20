@@ -424,13 +424,9 @@ plot_it<- function(frame=dataset_name,var1){
 ```
 look at some data
 ```{r}
-<<<<<<< HEAD
-Psum <- plot_it(var1="leafN")
-=======
-Psum <- plot_it(var1="ShellWt")
->>>>>>> b9a91d58fd37bf4f2cd06f98a0af9de0441472ea
+Psum <- plot_it(var1="stemGAI")
 
-plot_it(var1="GrainWt")
+#plot_it(var1="GrainWT")
 
 
 Psum
