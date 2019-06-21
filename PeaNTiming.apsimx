@@ -3071,7 +3071,7 @@
                             },
                             {
                               "$type": "Models.Functions.Constant, Models",
-                              "FixedValue": 0.5,
+                              "FixedValue": 0.3,
                               "Units": null,
                               "Name": "MaximumOrganWt",
                               "Children": [],
@@ -4244,7 +4244,7 @@
                   "Children": [
                     {
                       "$type": "Models.Functions.Constant, Models",
-                      "FixedValue": 1.0,
+                      "FixedValue": 1.5,
                       "Units": null,
                       "Name": "RUE",
                       "Children": [],
@@ -4756,7 +4756,7 @@
                       "Children": [
                         {
                           "$type": "Models.Functions.Constant, Models",
-                          "FixedValue": 0.00356,
+                          "FixedValue": 0.000356,
                           "Units": null,
                           "Name": "MassToArea",
                           "Children": [],
@@ -5072,19 +5072,49 @@
                   "Name": "DMDemands",
                   "Children": [
                     {
-                      "$type": "Models.Functions.MultiplyFunction, Models",
+                      "$type": "Models.Functions.PhaseLookup, Models",
                       "Name": "Structural",
                       "Children": [
                         {
-                          "$type": "Models.Functions.DemandFunctions.InternodeDemandFunction, Models",
-                          "Name": "DMDemandFunction",
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "Emergence",
+                          "End": "EndFlowering",
+                          "Name": "Vegetative",
                           "Children": [
                             {
-                              "$type": "Models.Functions.Constant, Models",
-                              "FixedValue": 0.3,
-                              "Units": null,
-                              "Name": "InterNodeWt",
-                              "Children": [],
+                              "$type": "Models.Functions.MultiplyFunction, Models",
+                              "Name": "Structural",
+                              "Children": [
+                                {
+                                  "$type": "Models.Functions.DemandFunctions.InternodeDemandFunction, Models",
+                                  "Name": "DMDemandFunction",
+                                  "Children": [
+                                    {
+                                      "$type": "Models.Functions.Constant, Models",
+                                      "FixedValue": 0.3,
+                                      "Units": null,
+                                      "Name": "InterNodeWt",
+                                      "Children": [],
+                                      "IncludeInDocumentation": true,
+                                      "Enabled": true,
+                                      "ReadOnly": false
+                                    }
+                                  ],
+                                  "IncludeInDocumentation": true,
+                                  "Enabled": true,
+                                  "ReadOnly": false
+                                },
+                                {
+                                  "$type": "Models.Functions.Constant, Models",
+                                  "FixedValue": 0.7,
+                                  "Units": null,
+                                  "Name": "StructuralFraction",
+                                  "Children": [],
+                                  "IncludeInDocumentation": true,
+                                  "Enabled": true,
+                                  "ReadOnly": false
+                                }
+                              ],
                               "IncludeInDocumentation": true,
                               "Enabled": true,
                               "ReadOnly": false
@@ -5095,42 +5125,16 @@
                           "ReadOnly": false
                         },
                         {
-                          "$type": "Models.Functions.Constant, Models",
-                          "FixedValue": 0.7,
-                          "Units": null,
-                          "Name": "StructuralFraction",
-                          "Children": [],
-                          "IncludeInDocumentation": true,
-                          "Enabled": true,
-                          "ReadOnly": false
-                        }
-                      ],
-                      "IncludeInDocumentation": true,
-                      "Enabled": true,
-                      "ReadOnly": false
-                    },
-                    {
-                      "$type": "Models.Functions.DemandFunctions.StorageDMDemandFunction, Models",
-                      "Name": "Storage",
-                      "Children": [
-                        {
-                          "$type": "Models.Functions.SubtractFunction, Models",
-                          "Name": "StorageFraction",
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "EndFlowering",
+                          "End": "HarvestRipe",
+                          "Name": "Reproductive",
                           "Children": [
                             {
                               "$type": "Models.Functions.Constant, Models",
-                              "FixedValue": 0.7,
+                              "FixedValue": 0.4,
                               "Units": null,
-                              "Name": "One",
-                              "Children": [],
-                              "IncludeInDocumentation": true,
-                              "Enabled": true,
-                              "ReadOnly": false
-                            },
-                            {
-                              "$type": "Models.Functions.VariableReference, Models",
-                              "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
-                              "Name": "StructuralFraction",
+                              "Name": "Zero",
                               "Children": [],
                               "IncludeInDocumentation": true,
                               "Enabled": true,
@@ -5147,27 +5151,146 @@
                       "ReadOnly": false
                     },
                     {
-                      "$type": "Models.Functions.DemandFunctions.StorageDMDemandFunction, Models",
-                      "Name": "Metabolic",
+                      "$type": "Models.Functions.PhaseLookup, Models",
+                      "Name": "Storage",
                       "Children": [
                         {
-                          "$type": "Models.Functions.SubtractFunction, Models",
-                          "Name": "StorageFraction",
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "Emergence",
+                          "End": "EndFlowering",
+                          "Name": "Vegetative",
+                          "Children": [
+                            {
+                              "$type": "Models.Functions.DemandFunctions.StorageDMDemandFunction, Models",
+                              "Name": "Storage",
+                              "Children": [
+                                {
+                                  "$type": "Models.Functions.SubtractFunction, Models",
+                                  "Name": "StorageFraction",
+                                  "Children": [
+                                    {
+                                      "$type": "Models.Functions.Constant, Models",
+                                      "FixedValue": 0.7,
+                                      "Units": null,
+                                      "Name": "One",
+                                      "Children": [],
+                                      "IncludeInDocumentation": true,
+                                      "Enabled": true,
+                                      "ReadOnly": false
+                                    },
+                                    {
+                                      "$type": "Models.Functions.VariableReference, Models",
+                                      "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
+                                      "Name": "StructuralFraction",
+                                      "Children": [],
+                                      "IncludeInDocumentation": true,
+                                      "Enabled": true,
+                                      "ReadOnly": false
+                                    }
+                                  ],
+                                  "IncludeInDocumentation": true,
+                                  "Enabled": true,
+                                  "ReadOnly": false
+                                }
+                              ],
+                              "IncludeInDocumentation": true,
+                              "Enabled": true,
+                              "ReadOnly": false
+                            }
+                          ],
+                          "IncludeInDocumentation": true,
+                          "Enabled": true,
+                          "ReadOnly": false
+                        },
+                        {
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "EndFlowering",
+                          "End": "HarvestRipe",
+                          "Name": "Reproductive",
                           "Children": [
                             {
                               "$type": "Models.Functions.Constant, Models",
-                              "FixedValue": 1.0,
+                              "FixedValue": 0.4,
                               "Units": null,
-                              "Name": "One",
+                              "Name": "Zero",
                               "Children": [],
                               "IncludeInDocumentation": true,
                               "Enabled": true,
                               "ReadOnly": false
-                            },
+                            }
+                          ],
+                          "IncludeInDocumentation": true,
+                          "Enabled": true,
+                          "ReadOnly": false
+                        }
+                      ],
+                      "IncludeInDocumentation": true,
+                      "Enabled": true,
+                      "ReadOnly": false
+                    },
+                    {
+                      "$type": "Models.Functions.PhaseLookup, Models",
+                      "Name": "Metabolic",
+                      "Children": [
+                        {
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "Emergence",
+                          "End": "EndFlowering",
+                          "Name": "Vegetative",
+                          "Children": [
                             {
-                              "$type": "Models.Functions.VariableReference, Models",
-                              "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
-                              "Name": "StructuralFraction",
+                              "$type": "Models.Functions.DemandFunctions.StorageDMDemandFunction, Models",
+                              "Name": "Metabolic",
+                              "Children": [
+                                {
+                                  "$type": "Models.Functions.SubtractFunction, Models",
+                                  "Name": "StorageFraction",
+                                  "Children": [
+                                    {
+                                      "$type": "Models.Functions.Constant, Models",
+                                      "FixedValue": 1.0,
+                                      "Units": null,
+                                      "Name": "One",
+                                      "Children": [],
+                                      "IncludeInDocumentation": true,
+                                      "Enabled": true,
+                                      "ReadOnly": false
+                                    },
+                                    {
+                                      "$type": "Models.Functions.VariableReference, Models",
+                                      "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
+                                      "Name": "StructuralFraction",
+                                      "Children": [],
+                                      "IncludeInDocumentation": true,
+                                      "Enabled": true,
+                                      "ReadOnly": false
+                                    }
+                                  ],
+                                  "IncludeInDocumentation": true,
+                                  "Enabled": true,
+                                  "ReadOnly": false
+                                }
+                              ],
+                              "IncludeInDocumentation": true,
+                              "Enabled": true,
+                              "ReadOnly": false
+                            }
+                          ],
+                          "IncludeInDocumentation": true,
+                          "Enabled": true,
+                          "ReadOnly": false
+                        },
+                        {
+                          "$type": "Models.Functions.PhaseLookupValue, Models",
+                          "Start": "EndFlowering",
+                          "End": "HarvestRipe",
+                          "Name": "Reproductive",
+                          "Children": [
+                            {
+                              "$type": "Models.Functions.Constant, Models",
+                              "FixedValue": 0.4,
+                              "Units": null,
+                              "Name": "Zero",
                               "Children": [],
                               "IncludeInDocumentation": true,
                               "Enabled": true,
@@ -5733,7 +5856,7 @@
             {
               "$type": "Models.PMF.Cultivar, Models",
               "Command": [
-                "[Stem].DMDemands.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.25",
+                "[Stem].DMDemands.Structural.Vegetative.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.25",
                 "[Phenology].GrainFilling.Target.FixedValue = 750"
               ],
               "Name": "A_green",
@@ -5745,7 +5868,7 @@
             {
               "$type": "Models.PMF.Cultivar, Models",
               "Command": [
-                "[Stem].DMDemands.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.2",
+                "[Stem].DMDemands.Structural.Vegetative.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.2",
                 "[Phenology].GrainFilling.Target.FixedValue = 1000"
               ],
               "Name": "B_yellow",
@@ -6551,11 +6674,15 @@
                     "[FieldPea].Shell.Live.Wt",
                     "[FieldPea].Grain.Live.Wt",
                     "[FieldPea].Leaf.LAI",
+                    "[FieldPea].Stem.EnergyBalance.GAIFunction as StemGAI",
+                    "[FieldPea].Shell.EnergyBalance.GAIFunction as PodGAI",
+                    "",
                     "[FieldPea].Leaf.CoverTotal",
                     "[FieldPea].Structure.LeafTipsAppeared",
                     "[FieldPea].Leaf.Nconc",
                     "[FieldPea].Stem.Nconc",
-                    "[FieldPea].Grain.Nconc"
+                    "[FieldPea].Grain.Nconc",
+                    "([FieldPea].Leaf.LAI+[FieldPea].Stem.EnergyBalance.GAIFunction+[FieldPea].Shell.EnergyBalance.GAIFunction) as GAI"
                   ],
                   "EventNames": [
                     "[Clock].DoReport"
@@ -6842,6 +6969,102 @@
                 {
                   "$type": "Models.Graph.Axis, Models",
                   "Type": 0,
+                  "Title": "Leaf Area Index (m2/m2)",
+                  "Inverted": false,
+                  "Minimum": "NaN",
+                  "Maximum": "NaN",
+                  "Interval": "NaN",
+                  "DateTimeAxis": false,
+                  "CrossesAtZero": false
+                }
+              ],
+              "LegendPosition": 1,
+              "DisabledSeries": [],
+              "Name": "GAI",
+              "Children": [
+                {
+                  "$type": "Models.Graph.Series, Models",
+                  "Type": 1,
+                  "XAxis": 3,
+                  "YAxis": 0,
+                  "ColourArgb": -16777216,
+                  "FactorToVaryColours": "Nit",
+                  "FactorToVaryMarkers": "Sow",
+                  "FactorToVaryLines": "Cult",
+                  "Marker": 11,
+                  "MarkerSize": 1,
+                  "Line": 1,
+                  "LineThickness": 0,
+                  "Checkpoint": "Current",
+                  "TableName": "LincReport",
+                  "XFieldName": "Clock.Today",
+                  "YFieldName": "GAI",
+                  "X2FieldName": null,
+                  "Y2FieldName": null,
+                  "ShowInLegend": true,
+                  "IncludeSeriesNameInLegend": false,
+                  "Cumulative": false,
+                  "CumulativeX": false,
+                  "Filter": null,
+                  "Name": "Predicted",
+                  "Children": [],
+                  "IncludeInDocumentation": true,
+                  "Enabled": true,
+                  "ReadOnly": false
+                },
+                {
+                  "$type": "Models.Graph.Series, Models",
+                  "Type": 1,
+                  "XAxis": 3,
+                  "YAxis": 0,
+                  "ColourArgb": -16747854,
+                  "FactorToVaryColours": "Nit",
+                  "FactorToVaryMarkers": "Sow",
+                  "FactorToVaryLines": null,
+                  "Marker": 5,
+                  "MarkerSize": 1,
+                  "Line": 4,
+                  "LineThickness": 0,
+                  "Checkpoint": "Current",
+                  "TableName": "Observed",
+                  "XFieldName": "Clock.Today",
+                  "YFieldName": "GAI",
+                  "X2FieldName": null,
+                  "Y2FieldName": null,
+                  "ShowInLegend": true,
+                  "IncludeSeriesNameInLegend": false,
+                  "Cumulative": false,
+                  "CumulativeX": false,
+                  "Filter": null,
+                  "Name": "Observed",
+                  "Children": [],
+                  "IncludeInDocumentation": true,
+                  "Enabled": true,
+                  "ReadOnly": false
+                }
+              ],
+              "IncludeInDocumentation": false,
+              "Enabled": true,
+              "ReadOnly": false
+            },
+            {
+              "$type": "Models.Graph.Graph, Models",
+              "Caption": null,
+              "Axis": [
+                {
+                  "$type": "Models.Graph.Axis, Models",
+                  "Type": 3,
+                  "Title": "Date",
+                  "Inverted": false,
+                  "Minimum": "NaN",
+                  "Maximum": "NaN",
+                  "Interval": "NaN",
+                  "DateTimeAxis": false,
+                  "CrossesAtZero": false
+                },
+                {
+                  "$type": "Models.Graph.Axis, Models",
+                  "Type": 0,
                   "Title": null,
                   "Inverted": false,
                   "Minimum": "NaN",
@@ -6966,7 +7189,7 @@
                   "LineThickness": 0,
                   "Checkpoint": "Current",
                   "TableName": "Observed",
-                  "XFieldName": "Clock.Today()",
+                  "XFieldName": "Clock.Today",
                   "YFieldName": "AboveGroundWt",
                   "X2FieldName": null,
                   "Y2FieldName": null,
@@ -7290,7 +7513,7 @@
                   "LineThickness": 0,
                   "Checkpoint": "Current",
                   "TableName": "Observed",
-                  "XFieldName": "Clock.Today()",
+                  "XFieldName": "Clock.Today",
                   "YFieldName": "Leaf.Live.Wt",
                   "X2FieldName": null,
                   "Y2FieldName": null,
@@ -7386,7 +7609,7 @@
                   "LineThickness": 0,
                   "Checkpoint": "Current",
                   "TableName": "Observed",
-                  "XFieldName": "Clock.Today()",
+                  "XFieldName": "Clock.Today",
                   "YFieldName": "Stem.Live.Wt",
                   "X2FieldName": null,
                   "Y2FieldName": null,
@@ -7482,8 +7705,8 @@
                   "LineThickness": 0,
                   "Checkpoint": "Current",
                   "TableName": "Observed",
-                  "XFieldName": "Clock.Today()",
-                  "YFieldName": "FieldPea.Pod.Live.Wt()",
+                  "XFieldName": "Clock.Today",
+                  "YFieldName": "Pod.Live.Wt",
                   "X2FieldName": null,
                   "Y2FieldName": null,
                   "ShowInLegend": true,
@@ -7550,72 +7773,6 @@
                   "TableName": "LincReport",
                   "XFieldName": "Clock.Today",
                   "YFieldName": "FieldPea.Structure.LeafTipsAppeared",
-                  "X2FieldName": null,
-                  "Y2FieldName": null,
-                  "ShowInLegend": true,
-                  "IncludeSeriesNameInLegend": false,
-                  "Cumulative": false,
-                  "CumulativeX": false,
-                  "Filter": null,
-                  "Name": "Predicted",
-                  "Children": [],
-                  "IncludeInDocumentation": true,
-                  "Enabled": true,
-                  "ReadOnly": false
-                }
-              ],
-              "IncludeInDocumentation": false,
-              "Enabled": true,
-              "ReadOnly": false
-            },
-            {
-              "$type": "Models.Graph.Graph, Models",
-              "Caption": null,
-              "Axis": [
-                {
-                  "$type": "Models.Graph.Axis, Models",
-                  "Type": 3,
-                  "Title": "Date",
-                  "Inverted": false,
-                  "Minimum": "NaN",
-                  "Maximum": "NaN",
-                  "Interval": "NaN",
-                  "DateTimeAxis": false,
-                  "CrossesAtZero": false
-                },
-                {
-                  "$type": "Models.Graph.Axis, Models",
-                  "Type": 0,
-                  "Title": null,
-                  "Inverted": false,
-                  "Minimum": "NaN",
-                  "Maximum": "NaN",
-                  "Interval": "NaN",
-                  "DateTimeAxis": false,
-                  "CrossesAtZero": false
-                }
-              ],
-              "LegendPosition": 1,
-              "DisabledSeries": [],
-              "Name": "Biomass1",
-              "Children": [
-                {
-                  "$type": "Models.Graph.Series, Models",
-                  "Type": 1,
-                  "XAxis": 3,
-                  "YAxis": 0,
-                  "ColourArgb": -1663232,
-                  "FactorToVaryColours": "Nit",
-                  "FactorToVaryMarkers": "Sow",
-                  "FactorToVaryLines": "Cult",
-                  "Marker": 11,
-                  "MarkerSize": 0,
-                  "Line": 0,
-                  "LineThickness": 0,
-                  "Checkpoint": "Current",
-                  "TableName": "LincReport",
-                  "XFieldName": "Clock.Today",
-                  "YFieldName": "FieldPea.AboveGround.Wt",
                   "X2FieldName": null,
                   "Y2FieldName": null,
                   "ShowInLegend": true,
@@ -7909,6 +8066,304 @@
                       "TableName": "Observed",
                       "XFieldName": "Clock.Today()",
                       "YFieldName": "Grain.NConc",
+                      "X2FieldName": null,
+                      "Y2FieldName": null,
+                      "ShowInLegend": true,
+                      "IncludeSeriesNameInLegend": false,
+                      "Cumulative": false,
+                      "CumulativeX": false,
+                      "Filter": null,
+                      "Name": "Observed",
+                      "Children": [],
+                      "IncludeInDocumentation": true,
+                      "Enabled": true,
+                      "ReadOnly": false
+                    }
+                  ],
+                  "IncludeInDocumentation": false,
+                  "Enabled": true,
+                  "ReadOnly": false
+                }
+              ],
+              "IncludeInDocumentation": true,
+              "Enabled": true,
+              "ReadOnly": false
+            },
+            {
+              "$type": "Models.Core.Folder, Models",
+              "ShowPageOfGraphs": true,
+              "Name": "GreenArea",
+              "Children": [
+                {
+                  "$type": "Models.Graph.Graph, Models",
+                  "Caption": null,
+                  "Axis": [
+                    {
+                      "$type": "Models.Graph.Axis, Models",
+                      "Type": 3,
+                      "Title": "Date",
+                      "Inverted": false,
+                      "Minimum": "NaN",
+                      "Maximum": "NaN",
+                      "Interval": "NaN",
+                      "DateTimeAxis": false,
+                      "CrossesAtZero": false
+                    },
+                    {
+                      "$type": "Models.Graph.Axis, Models",
+                      "Type": 0,
+                      "Title": "Leaf Area Index (m2/m2)",
+                      "Inverted": false,
+                      "Minimum": "NaN",
+                      "Maximum": "NaN",
+                      "Interval": "NaN",
+                      "DateTimeAxis": false,
+                      "CrossesAtZero": false
+                    }
+                  ],
+                  "LegendPosition": 1,
+                  "DisabledSeries": [],
+                  "Name": "LAI",
+                  "Children": [
+                    {
+                      "$type": "Models.Graph.Series, Models",
+                      "Type": 1,
+                      "XAxis": 3,
+                      "YAxis": 0,
+                      "ColourArgb": -16777216,
+                      "FactorToVaryColours": "Nit",
+                      "FactorToVaryMarkers": "Sow",
+                      "FactorToVaryLines": "Cult",
+                      "Marker": 11,
+                      "MarkerSize": 1,
+                      "Line": 1,
+                      "LineThickness": 0,
+                      "Checkpoint": "Current",
+                      "TableName": "LincReport",
+                      "XFieldName": "Clock.Today",
+                      "YFieldName": "FieldPea.Leaf.LAI",
+                      "X2FieldName": null,
+                      "Y2FieldName": null,
+                      "ShowInLegend": true,
+                      "IncludeSeriesNameInLegend": false,
+                      "Cumulative": false,
+                      "CumulativeX": false,
+                      "Filter": null,
+                      "Name": "Predicted",
+                      "Children": [],
+                      "IncludeInDocumentation": true,
+                      "Enabled": true,
+                      "ReadOnly": false
+                    },
+                    {
+                      "$type": "Models.Graph.Series, Models",
+                      "Type": 1,
+                      "XAxis": 3,
+                      "YAxis": 0,
+                      "ColourArgb": -16747854,
+                      "FactorToVaryColours": "Nit",
+                      "FactorToVaryMarkers": "Sow",
+                      "FactorToVaryLines": null,
+                      "Marker": 5,
+                      "MarkerSize": 1,
+                      "Line": 4,
+                      "LineThickness": 0,
+                      "Checkpoint": "Current",
+                      "TableName": "Observed",
+                      "XFieldName": "Clock.Today",
+                      "YFieldName": "Leaf.LAI",
+                      "X2FieldName": null,
+                      "Y2FieldName": null,
+                      "ShowInLegend": true,
+                      "IncludeSeriesNameInLegend": false,
+                      "Cumulative": false,
+                      "CumulativeX": false,
+                      "Filter": null,
+                      "Name": "Observed",
+                      "Children": [],
+                      "IncludeInDocumentation": true,
+                      "Enabled": true,
+                      "ReadOnly": false
+                    }
+                  ],
+                  "IncludeInDocumentation": false,
+                  "Enabled": true,
+                  "ReadOnly": false
+                },
+                {
+                  "$type": "Models.Graph.Graph, Models",
+                  "Caption": null,
+                  "Axis": [
+                    {
+                      "$type": "Models.Graph.Axis, Models",
+                      "Type": 3,
+                      "Title": "Date",
+                      "Inverted": false,
+                      "Minimum": "NaN",
+                      "Maximum": "NaN",
+                      "Interval": "NaN",
+                      "DateTimeAxis": false,
+                      "CrossesAtZero": false
+                    },
+                    {
+                      "$type": "Models.Graph.Axis, Models",
+                      "Type": 0,
+                      "Title": "Leaf Area Index (m2/m2)",
+                      "Inverted": false,
+                      "Minimum": "NaN",
+                      "Maximum": "NaN",
+                      "Interval": "NaN",
+                      "DateTimeAxis": false,
+                      "CrossesAtZero": false
+                    }
+                  ],
+                  "LegendPosition": 1,
+                  "DisabledSeries": [],
+                  "Name": "StemGAI",
+                  "Children": [
+                    {
+                      "$type": "Models.Graph.Series, Models",
+                      "Type": 1,
+                      "XAxis": 3,
+                      "YAxis": 0,
+                      "ColourArgb": -16777216,
+                      "FactorToVaryColours": "Nit",
+                      "FactorToVaryMarkers": "Sow",
+                      "FactorToVaryLines": "Cult",
+                      "Marker": 11,
+                      "MarkerSize": 1,
+                      "Line": 1,
+                      "LineThickness": 0,
+                      "Checkpoint": "Current",
+                      "TableName": "LincReport",
+                      "XFieldName": "Clock.Today",
+                      "YFieldName": "StemGAI",
+                      "X2FieldName": null,
+                      "Y2FieldName": null,
+                      "ShowInLegend": true,
+                      "IncludeSeriesNameInLegend": false,
+                      "Cumulative": false,
+                      "CumulativeX": false,
+                      "Filter": null,
+                      "Name": "Predicted",
+                      "Children": [],
+                      "IncludeInDocumentation": true,
+                      "Enabled": true,
+                      "ReadOnly": false
+                    },
+                    {
+                      "$type": "Models.Graph.Series, Models",
+                      "Type": 1,
+                      "XAxis": 3,
+                      "YAxis": 0,
+                      "ColourArgb": -16747854,
+                      "FactorToVaryColours": "Nit",
+                      "FactorToVaryMarkers": "Sow",
+                      "FactorToVaryLines": null,
+                      "Marker": 5,
+                      "MarkerSize": 1,
+                      "Line": 4,
+                      "LineThickness": 0,
+                      "Checkpoint": "Current",
+                      "TableName": "Observed",
+                      "XFieldName": "Clock.Today",
+                      "YFieldName": "Stem.GAI",
+                      "X2FieldName": null,
+                      "Y2FieldName": null,
+                      "ShowInLegend": true,
+                      "IncludeSeriesNameInLegend": false,
+                      "Cumulative": false,
+                      "CumulativeX": false,
+                      "Filter": null,
+                      "Name": "Observed",
+                      "Children": [],
+                      "IncludeInDocumentation": true,
+                      "Enabled": true,
+                      "ReadOnly": false
+                    }
+                  ],
+                  "IncludeInDocumentation": false,
+                  "Enabled": true,
+                  "ReadOnly": false
+                },
+                {
+                  "$type": "Models.Graph.Graph, Models",
+                  "Caption": null,
+                  "Axis": [
+                    {
+                      "$type": "Models.Graph.Axis, Models",
+                      "Type": 3,
+                      "Title": "Date",
+                      "Inverted": false,
+                      "Minimum": "NaN",
+                      "Maximum": "NaN",
+                      "Interval": "NaN",
+                      "DateTimeAxis": false,
+                      "CrossesAtZero": false
+                    },
+                    {
+                      "$type": "Models.Graph.Axis, Models",
+                      "Type": 0,
+                      "Title": "Leaf Area Index (m2/m2)",
+                      "Inverted": false,
+                      "Minimum": "NaN",
+                      "Maximum": "NaN",
+                      "Interval": "NaN",
+                      "DateTimeAxis": false,
+                      "CrossesAtZero": false
+                    }
+                  ],
+                  "LegendPosition": 1,
+                  "DisabledSeries": [],
+                  "Name": "PodGAI",
+                  "Children": [
+                    {
+                      "$type": "Models.Graph.Series, Models",
+                      "Type": 1,
+                      "XAxis": 3,
+                      "YAxis": 0,
+                      "ColourArgb": -16777216,
+                      "FactorToVaryColours": "Nit",
+                      "FactorToVaryMarkers": "Sow",
+                      "FactorToVaryLines": "Cult",
+                      "Marker": 11,
+                      "MarkerSize": 1,
+                      "Line": 1,
+                      "LineThickness": 0,
+                      "Checkpoint": "Current",
+                      "TableName": "LincReport",
+                      "XFieldName": "Clock.Today",
+                      "YFieldName": "PodGAI",
+                      "X2FieldName": null,
+                      "Y2FieldName": null,
+                      "ShowInLegend": true,
+                      "IncludeSeriesNameInLegend": false,
+                      "Cumulative": false,
+                      "CumulativeX": false,
+                      "Filter": null,
+                      "Name": "Predicted",
+                      "Children": [],
+                      "IncludeInDocumentation": true,
+                      "Enabled": true,
+                      "ReadOnly": false
+                    },
+                    {
+                      "$type": "Models.Graph.Series, Models",
+                      "Type": 1,
+                      "XAxis": 3,
+                      "YAxis": 0,
+                      "ColourArgb": -16747854,
+                      "FactorToVaryColours": "Nit",
+                      "FactorToVaryMarkers": "Sow",
+                      "FactorToVaryLines": null,
+                      "Marker": 5,
+                      "MarkerSize": 1,
+                      "Line": 4,
+                      "LineThickness": 0,
+                      "Checkpoint": "Current",
+                      "TableName": "Observed",
+                      "XFieldName": "Clock.Today",
+                      "YFieldName": "Pod.GAI",
                       "X2FieldName": null,
                       "Y2FieldName": null,
                       "ShowInLegend": true,
@@ -9346,7 +9801,16 @@
     },
     {
       "$type": "Models.Factorial.Experiment, Models",
-      "DisabledSimNames": [],
+      "DisabledSimNames": [
+        "HawkesBayCultASowLateNitLate",
+        "HawkesBayCultASowMidNitLate",
+        "HawkesBayCultASowEarlyNitLate",
+        "HawkesBayCultASowLateNitEarly",
+        "HawkesBayCultASowMidNitEarly",
+        "HawkesBayCultASowEarlyNitEarly",
+        "HawkesBayCultASowLateNitNil",
+        "HawkesBayCultASowMidNitNil"
+      ],
       "Name": "HawkesBay",
       "Children": [
         {
@@ -9400,7 +9864,7 @@
             },
             {
               "$type": "Models.Factorial.Factor, Models",
-              "Specification": null,
+              "Specification": "",
               "Name": "Sow",
               "Children": [
                 {
@@ -10293,7 +10757,7 @@
                   "Line": 1,
                   "LineThickness": 0,
                   "Checkpoint": "Current",
-                  "TableName": "LincReport",
+                  "TableName": "HBReport",
                   "XFieldName": "Clock.Today",
                   "YFieldName": "FieldPea.Leaf.LAI",
                   "X2FieldName": null,
@@ -10906,7 +11370,7 @@
                   "LineThickness": 0,
                   "Checkpoint": "Current",
                   "TableName": "Observed",
-                  "XFieldName": "Clock.Today()",
+                  "XFieldName": "Clock.Today",
                   "YFieldName": "Stem.Live.Wt",
                   "X2FieldName": null,
                   "Y2FieldName": null,
