@@ -443,6 +443,17 @@ Plot.LeafNConc <- plot_it(var1="LeafNConc")
 Plot.LeafNConc+ylab("Leaf dry weith (g N/g DW)")
 
 
+#leaf stem and pod area for potneital light interception
+
+#greain weight
+
+#grain #/protein
+
+#node number,  leaf number
+
+
+
+
 ```
 
 ```{r}
