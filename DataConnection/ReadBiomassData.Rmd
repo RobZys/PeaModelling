@@ -425,7 +425,7 @@ plot_it<- function(frame=dataset_name,var1){
 
 ```
 look at some data
-```{r}
+```{r, key plots}
 Psum <- plot_it(var1="stemGAI")
 
 #plot_it(var1="GrainWT")
