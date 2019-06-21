@@ -5180,7 +5180,7 @@
                                     },
                                     {
                                       "$type": "Models.Functions.VariableReference, Models",
-                                      "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
+                                      "VariableName": "[Stem].DMDemands.Structural.Vegetative.Structural.StructuralFraction.Value()",
                                       "Name": "StructuralFraction",
                                       "Children": [],
                                       "IncludeInDocumentation": true,
@@ -5258,7 +5258,7 @@
                                     },
                                     {
                                       "$type": "Models.Functions.VariableReference, Models",
-                                      "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
+                                      "VariableName": "[Stem].DMDemands.Structural.Vegetative.Structural.StructuralFraction.Value()",
                                       "Name": "StructuralFraction",
                                       "Children": [],
                                       "IncludeInDocumentation": true,
