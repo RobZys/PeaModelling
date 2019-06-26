@@ -203,6 +203,10 @@ for (k in 1:length(df_CombinedData$SampleDeadDW) ) #any column will do for lengt
 
 }
 
+#plant pop to plants per m^2
+df_CombinedData$PP <- df_CombinedData$PP/df_CombinedData$HA
+
+
 # Intermediate Grain 
 df_CombinedData$SampleGWt = df_CombinedData$grainDW
 
@@ -426,13 +430,41 @@ plot_it<- function(frame=dataset_name,var1){
 ```
 look at some data
 ```{r, key plots}
-Psum <- plot_it(var1="stemGAI")
 
-#plot_it(var1="GrainWT")
+p.pop <- plot_it(var1="PP")
+p.pop+ylim(0,120)+ylab("Plant population (plats/m^2)")
 
 
-Psum
+p.leafLAI <- plot_it(var1="leafLAI")
+p.leafLAI +ylab("LAI (m^2/m^2)")+ylim(0,6)
+
+
+p.stema <- plot_it(var1="stemGAI")
+p.stema +ylab("Stem GAI (m^2/m^2)")+ylim(0,6)
+
+
+
+
+p.poda <- plot_it(var1="podGAI")
+p.poda +ylab("Pod GAI (m^2/m^2)")+ylim(0,6)
+
+
+#something about total green area and the proportion contributed by leaf, stem and pod?
+
+####p.greena <- plot_it(var1="")
+
+
+
+
+p.GrainWt <- plot_it(var1="GrainWt")
+p.GrainWt     #needs units, seems supper rapid?
+
+
+
+
 plot_it(var1="StemN")
+
+
 
 plot_it(var1="GrainLiveN")
 
@@ -441,6 +473,17 @@ plot_it(var1="GrainMatureN")
 Plot.LeafNConc <- plot_it(var1="LeafNConc")
 
 Plot.LeafNConc+ylab("Leaf dry weith (g N/g DW)")
+
+
+#leaf stem and pod area for potneital light interception
+
+#greain weight
+
+#grain #/protein
+
+#node number,  leaf number
+
+
 
 
 ```
