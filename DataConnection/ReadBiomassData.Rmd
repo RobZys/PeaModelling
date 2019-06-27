@@ -478,10 +478,30 @@ p.GrainMatureN
 
 
 
-Plot.LeafNConc <- plot_it(var1="LeafNConc")
+P.LeafNConc <- plot_it(var1="LeafNConc")
+P.LeafNConc+ylab("Leaf N content (g N/g DW)")
 
-Plot.LeafNConc+ylab("Leaf dry weith (g N/g DW)")
 
+
+P.StemNConc <- plot_it(var1="StemNConc")
+P.StemNConc+ylab("Stem N content (g N/g DW)")
+
+
+P.GrainNConc <- plot_it(var1="GrainNConc")
+P.GrainNConc+ylab("Grain N content (g N/g DW)")
+
+P.GrainMatureNConc <- plot_it(var1="GrainMatureNConc")
+P.GrainMatureNConc+ylab("Grain N content (g N/g DW)")
+
+p.final_grain_N <- (sum_it(var1="GrainMatureNConc")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")
+p.final_grain_N + ylab("Final Grain N content (g N/g DW)")
+
+
+p.final_grain_Wt <- (sum_it(var1="GrainWt")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")
+p.final_grain_Wt + ylab("Final Grain weight (g m^2)")
+
+p.GrainMatureN <- (sum_it(var1="GrainMatureN")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")
+p.GrainMatureN + ylab("GrainMatureN (g m^2)")
 
 #leaf stem and pod area for potneital light interception
 
