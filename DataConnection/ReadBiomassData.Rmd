@@ -381,22 +381,33 @@ df_CombinedData$N_Content_Green_Pod <- as.numeric(as.character(df_CombinedData$N
  df_CombinedData <-  df_CombinedData %>%
     mutate(PodMatureN = PodMatureNConc * ShellWt )
 
- 
+
+  
+
+  
 ```
 # For testing purposes lets group the midnatch days at HB
 ```{r}
-for (k in 1:length(df_CombinedData$Date) ) 
- {
-   tmp <- df_CombinedData$Date[k] 
-  if (isTRUE( tmp == as.Date("2019-01-25") ))       
-#   if (tmp = "2019-01-25")  
-   {
-    df_CombinedData$Date[k] <- as.Date("2019-01-23")
-   }
+# for (k in 1:length(df_CombinedData$Date) ) 
+#  {
+#    tmp <- df_CombinedData$Date[k] 
+#   if (isTRUE( tmp == as.Date("2019-01-25") ))       
+# #   if (tmp = "2019-01-25")  
+#    {
+#     df_CombinedData$Date[k] <- as.Date("2019-01-23")
+#    }
+# 
+# }
 
-}
-
-
+# for exaoning purposes let separate the data
+  df_CombinedDataHB <-  df_CombinedData[df_CombinedData$Site == "HawkesBay",]
+  df_CombinedDataHB1 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 1,]
+  df_CombinedDataHB2 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 2,]
+  df_CombinedDataHB3 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 3,]
+  df_CombinedDataHB4 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 4,]
+  df_CombinedDataHB5 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 5,]
+  df_CombinedDataHB6 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 6,]
+  
 ```
 
 #Summary mean and se grouped by site, treatment and clock as function
@@ -407,7 +418,7 @@ sum_it<- function(frame=df_CombinedData,var1 ){
   group_by(Date,Trt_name, Site) %>% 
   summarise_at(.vars = var1,funs(mean,se=sd(.)/sqrt(n())))
   
-#print(sum_mean)
+print(sum_mean)
 }
 
 
@@ -432,7 +443,7 @@ look at some data
 ```{r, key plots}
 
 p.pop <- plot_it(var1="PP")
-p.pop+ylim(0,120)+ylab("Plant population (plats/m^2)")
+p.pop+ylim(0,120)+ylab("Plant population (plants/m^2)")
 
 
 p.leafLAI <- plot_it(var1="leafLAI")
@@ -494,7 +505,7 @@ P.GrainMatureNConc <- plot_it(var1="GrainMatureNConc")
 P.GrainMatureNConc+ylab("Grain N content (g N/g DW)")
 
 p.final_grain_N <- (sum_it(var1="GrainMatureNConc")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")
-p.final_grain_N + ylab("Final Grain N content (g N/g DW)")
+p.final_grain_N + ylab("Final Grain N conc (g N/g DW)")
 
 
 p.final_grain_Wt <- (sum_it(var1="GrainWt")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")

@@ -5180,7 +5180,7 @@
                                     },
                                     {
                                       "$type": "Models.Functions.VariableReference, Models",
-                                      "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
+                                      "VariableName": "[Stem].DMDemands.Structural.Vegetative.Structural.StructuralFraction.Value()",
                                       "Name": "StructuralFraction",
                                       "Children": [],
                                       "IncludeInDocumentation": true,
@@ -5258,7 +5258,7 @@
                                     },
                                     {
                                       "$type": "Models.Functions.VariableReference, Models",
-                                      "VariableName": "[Stem].DMDemands.Structural.StructuralFraction.Value()",
+                                      "VariableName": "[Stem].DMDemands.Structural.Vegetative.Structural.StructuralFraction.Value()",
                                       "Name": "StructuralFraction",
                                       "Children": [],
                                       "IncludeInDocumentation": true,
@@ -5976,7 +5976,7 @@
             },
             {
               "$type": "Models.Factorial.Factor, Models",
-              "Specification": null,
+              "Specification": "",
               "Name": "Sow",
               "Children": [
                 {
@@ -7872,7 +7872,7 @@
                       "LineThickness": 0,
                       "Checkpoint": "Current",
                       "TableName": "Observed",
-                      "XFieldName": "Clock.Today()",
+                      "XFieldName": "Clock.Today",
                       "YFieldName": "Leaf.NConc",
                       "X2FieldName": null,
                       "Y2FieldName": null,
@@ -7968,7 +7968,7 @@
                       "LineThickness": 0,
                       "Checkpoint": "Current",
                       "TableName": "Observed",
-                      "XFieldName": "Clock.Today()",
+                      "XFieldName": "Clock.Today",
                       "YFieldName": "Stem.N.Conc",
                       "X2FieldName": null,
                       "Y2FieldName": null,
@@ -8064,7 +8064,7 @@
                       "LineThickness": 0,
                       "Checkpoint": "Current",
                       "TableName": "Observed",
-                      "XFieldName": "Clock.Today()",
+                      "XFieldName": "Clock.Today",
                       "YFieldName": "Grain.NConc",
                       "X2FieldName": null,
                       "Y2FieldName": null,
