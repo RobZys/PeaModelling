@@ -462,7 +462,7 @@ p.GrainWt     #needs units, seems supper rapid?
 
 
 
-plot_it(var1="StemN")
+plot_it(var1="LeafNConc")
 
 
 

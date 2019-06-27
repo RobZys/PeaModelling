@@ -24,6 +24,16 @@ When you click the **Knit** button a document will be generated that includes bo
 ```{r }
 #Read consist data for report and analysis
 
+library(lubridate)
+library(plyr);library(dplyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(magrittr) #required to use the pipe (%>%) operator
+library(readxl)
+library(tidyverse)
+
+
  
  SourceRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
  DestRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
@@ -32,7 +42,7 @@ When you click the **Knit** button a document will be generated that includes bo
 # 
  cd_Path <- paste0(DestRootDir, "ObservedData_",dataset_name,".txt")
 # 
-df_obsData <- data_frame()
+#df_obsData <- data_frame()
 df_obsData <- read.table(cd_Path , header = TRUE,  sep = '\t')
 # #print(cd_Path)
 
@@ -72,5 +82,26 @@ df_ReqData [is.numeric(df_ReqData) & is.na(df_ReqData)] <- "*"
 
 ```{r}
 write.table(df_ReqData,  cd_Path <- paste0(DestRootDir, "PeaSumData.txt"), row.names = F, quote = F, sep = '\t')
+```
+
+
+### usefull relationships
+```{r}
+
+LAlinearMod <- lm(LeafArea ~ leafLiveWt, data=df_DataSum)  # build linear regression model on full data
+summary(LAlinearMod)
+ggplot(data=df_DataSum, aes(x=StemLiveWt,y=LeafArea, colour=Trt_name, shape=Site))+
+    geom_point()+
+    geom_line()+ 
+     facet_grid(~Site)
+
+
+SAlinearMod <- lm(StemArea ~ StemLiveWt, data=df_DataSum)  # build linear regression model on full data
+summary(SAlinearMod)
+ggplot(data=df_DataSum, aes(x=StemLiveWt,y=StemArea, colour=Trt_name, shape=Site))+
+    geom_point()+
+    geom_line()+ 
+     facet_grid(~Site)
+
 ```
 

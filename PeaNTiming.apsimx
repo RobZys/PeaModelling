@@ -5976,7 +5976,7 @@
             },
             {
               "$type": "Models.Factorial.Factor, Models",
-              "Specification": null,
+              "Specification": "",
               "Name": "Sow",
               "Children": [
                 {
@@ -7968,7 +7968,7 @@
                       "LineThickness": 0,
                       "Checkpoint": "Current",
                       "TableName": "Observed",
-                      "XFieldName": "Clock.Today()",
+                      "XFieldName": "Clock.Today",
                       "YFieldName": "Stem.N.Conc",
                       "X2FieldName": null,
                       "Y2FieldName": null,
