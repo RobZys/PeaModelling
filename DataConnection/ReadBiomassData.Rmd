@@ -421,7 +421,7 @@ plot_it<- function(frame=dataset_name,var1){
     geom_point()+
     geom_line()+ 
     geom_errorbar(aes(ymin=mean-se,ymax=mean+se))+
-    facet_grid(~Site)
+    facet_grid(Site~.)
   
   it_plot
 }
@@ -460,15 +460,23 @@ p.GrainWt <- plot_it(var1="GrainWt")
 p.GrainWt     #needs units, seems supper rapid?
 
 
+p.StemN <- plot_it(var1="StemN")
+p.StemN+ylab("Stem N (g/m^2)")
+
+P.leafN <- plot_it(var1="leafN")
+P.leafN+ylab("Leaf N (g/m^2)")
 
 
-plot_it(var1="StemN")
+
+p.GrainLiveN<- plot_it(var1="GrainLiveN")
+p.GrainLiveN
 
 
 
-plot_it(var1="GrainLiveN")
+p.GrainMatureN <- plot_it(var1="GrainMatureN")
+p.GrainMatureN
 
-plot_it(var1="GrainMatureN")
+
 
 Plot.LeafNConc <- plot_it(var1="LeafNConc")
 
