@@ -371,6 +371,10 @@ df_CombinedData$N_Content_Green_Pod <- as.numeric(as.character(df_CombinedData$N
  df_CombinedData <-  df_CombinedData %>%
     mutate(GrainMatureN = GrainMatureNConc * GrainWt )
  
+df_CombinedData <- df_CombinedData %>%  
+  mutate(Grain_crudeP=GrainMatureN*6.25)
+ 
+ 
  df_CombinedData <-  df_CombinedData %>%
     mutate(PodNConc = N_Content_Green_Pod/100.0)
  df_CombinedData <-  df_CombinedData %>%
@@ -508,11 +512,19 @@ p.final_grain_N <- (sum_it(var1="GrainMatureNConc")) %>% filter(Date>"2019-01-22
 p.final_grain_N + ylab("Final Grain N conc (g N/g DW)")
 
 
+###
+pbox.final_grain_N <- (df_CombinedData) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=GrainMatureNConc, colour=Site, shape=Trt_name))+geom_point(position="dodge")+geom_boxplot()
+pbox.final_grain_N + ylab("Final Grain N conc (g N/g DW)")
+###
+
 p.final_grain_Wt <- (sum_it(var1="GrainWt")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")
 p.final_grain_Wt + ylab("Final Grain weight (g m^2)")
 
 p.GrainMatureN <- (sum_it(var1="GrainMatureN")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")
 p.GrainMatureN + ylab("GrainMatureN (g m^2)")
+
+p.Grain_crudeP <- (sum_it(var1="Grain_crudeP")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")
+p.Grain_crudeP + ylab("Grain Crude Protein yield (g m^2)")
 
 #leaf stem and pod area for potneital light interception
 
@@ -525,6 +537,19 @@ p.GrainMatureN + ylab("GrainMatureN (g m^2)")
 
 
 
+```
+
+
+
+```{r,tests}
+t.final_grain_N <- (df_CombinedData) %>% filter(Date>"2019-01-22") %>% filter(Trt_name %in% c("CB_E_0N", "CB_E_EN", "CB_E_LN"))  %>% 
+  lm(.,formula= Grain_crudeP ~ as.factor(N_timing)*Site)
+
+
+summary(t.final_grain_N)
+
+summary.aov(t.final_grain_N)
+#*factor(Site)*factor(N_timing)*factor(Sowing_Date)++factor(Block)) %>%filter(Site=="Lincoln")
 ```
 
 ```{r}
