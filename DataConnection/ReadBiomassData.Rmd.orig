@@ -1,0 +1,296 @@
+---
+title: "Transforming Pea data into observed data for sims discovery science"
+author: "R Zyskowski , Adrain Hunt"
+date: "`r Sys.Date()`"
+output:
+  github_document:
+    toc: yes
+  html_document: default
+    
+---
+
+## Step one read data from Excel File
+
+Key processes:
+
+- Reads  *Technically correct* data into `data.frame`
+
+- Combines the Lincoln & Hawkes bay data
+
+
+#### Data management
+
+```{r, results='hide', echo=FALSE, include=FALSE}
+
+rm(list=setdiff(ls(), "source_rmd")) #remove all objects but "source_rmd" from the environment before assigning the new objects .. this is especially included to use this script as a child script in the MainScript.Rmd file 
+
+#rm(list = ls(all = TRUE))
+
+```
+
+Load the required libraries.
+
+
+```{r, warning=FALSE}
+# load the required libraries
+library(lubridate)
+library(plyr);library(dplyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(magrittr) #required to use the pipe (%>%) operator
+library(readxl)
+library(tidyverse)
+
+```
+
+
+** Set the directories and Data File**
+```{r}
+url <- "https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame.aspx?sourcedoc=/project/P442060-13/Research/18_19_SAE_pea_protein_managment.xlsx&action=default"
+
+Source_HB = "RAW_HB"
+Source_Linc = "RAW_Lincoln"
+
+```
+
+
+### Create the Raw Data files
+
+
+```{r}
+source(file = "../IplantScrape.r") #source scraper function 
+
+df_RAW_Lincoln<- scrape_xl(url, sheet = Source_Linc, skip = 2)
+df_RAW_HB<- scrape_xl(url, sheet =  Source_HB, skip = 2)
+
+
+df_RAW_HB$Index  <- NULL
+df_RAW_Lincoln$Index  <- NULL
+#name contains &
+names(df_RAW_Lincoln)[38] <- "FinalPodPeaFW"
+
+```
+
+#### Inspection of loaded data set
+
+```{r}
+#Retrieve the classes of all columns in a data.frame 
+str(df_RAW_Lincoln)
+```
+
+
+
+```{r}
+str(df_RAW_HB)
+```
+
+
+
+```{r}
+summary(df_RAW_HB)
+```
+
+
+
+
+
+```{r}
+head(df_RAW_HB)
+```
+
+
+### Removing rows with NAs (missing values) in `data.frame`
+
+```{r}
+# Remove rows with NAs in data.frame
+#df_HBData <- df_RAW_HB[!complete.cases(df_RAW_HB), ]
+df_HBData <- df_RAW_HB
+na.omit(df_HBData)
+
+df_LincolnData <- df_RAW_Lincoln
+na.omit(df_LincolnData)
+
+#head(df_HBData)
+
+```
+
+### Add column Represeint Site
+```{r}
+df_HBData$Site = "HawkesBay"
+df_LincolnData$Site = "Lincoln"
+
+```
+```{r}
+df_HBData$partFW <- as.numeric(as.character(df_HBData$partFW)) 
+df_HBData$maturepodFW <- as.numeric(as.character(df_HBData$maturepodFW)) 
+df_HBData$maturepodDW <- as.numeric(as.character(df_HBData$maturepodDW)) 
+df_LincolnData$maturepodFW <- as.numeric(as.character(df_LincolnData$maturepodDW)) 
+
+
+```
+
+### Merge the Two Dataframes based on Common factors
+```{r}
+df_CombinedData  <- bind_rows(df_HBData,df_LincolnData)
+
+head(df_CombinedData)
+
+```
+### Fix up Columns to match Both
+```{r}
+# Sample Fresh Weight
+   # we need to know the Fesh weight of the sample for the measure area.
+df_CombinedData$SampleFW = df_CombinedData$TFW
+
+   # we need to know how much of the partition was used for subsample
+df_CombinedData$PARTFW = df_CombinedData$partFW
+
+
+for (k in 1:length(df_CombinedData$TFW) ) #any column will do for length
+ {
+  #Choose out of FW1 & 2 for HB
+  if (is.na(df_CombinedData$TFW2[k]) == FALSE)
+  {
+    if (is.na(df_CombinedData$TFW[k]) == TRUE)
+      {
+       df_CombinedData$SampleFW[k] = df_CombinedData$TFW2[k] 
+      }
+  }
+  
+  #if final harvest
+  #HB
+  if (isTRUE( df_CombinedData$Final_residueFW[k] > 0) )       
+   {
+   
+    df_CombinedData$PARTFW[k] = ((df_CombinedData$Final_residueFW[k] + df_CombinedData$Final_podFW[k] +df_CombinedData$Final_grainFW[k]))# + df_CombinedData$Final_grainSprouted[k]))
+   }
+  #lincoln
+  if (isTRUE( df_CombinedData$Final_ResidueSubFW[k] > 0) )       
+   {
+   
+    df_CombinedData$PARTFW[k] = ((df_CombinedData$Final_ResidueSubFW[k] + df_CombinedData$FinalPodPeaFW[k]))#+ df_CombinedData$Final_grainSprouted[k]))
+   }
+ 
+}
+
+
+
+#SampleDW
+
+# leaf & stem
+df_CombinedData$SampleLeafDW <- df_CombinedData$greenleafDW
+df_CombinedData$SampleStemDW <- df_CombinedData$greenstemDW
+
+# Dead leaf and Stem
+df_CombinedData$SampleDeadDW <- df_CombinedData$deadFW
+
+for (k in 1:length(df_CombinedData$SampleDeadDW) ) #any column will do for length
+ {
+   if (is.na(df_CombinedData$SampleDeadDW[k]) == TRUE)
+      {
+       df_CombinedData$SampleDeadDW[k] = df_CombinedData$deadstemDW[k] + df_CombinedData$deadleafDW[k]
+      }
+    if (is.na(df_CombinedData$SampleDeadDW[k]) == TRUE)
+      {
+       df_CombinedData$SampleDeadDW[k] = 0
+      }
+ 
+
+}
+
+# Intermediate Grain 
+df_CombinedData$SampleGWt = df_CombinedData$grainDW
+
+
+for (k in 1:length(df_CombinedData$grainDW) ) #any column will do for length
+ {
+   if (is.na(df_CombinedData$grainDW[k]) ==TRUE)
+   {
+   
+   if (is.na(df_CombinedData$greengrainDW[k]) == FALSE)
+      {
+       df_CombinedData$SampleGWt[k] =  df_CombinedData$greengrainDW[k]
+      }
+
+   #Add mature
+      if (is.na(df_CombinedData$maturegrainDW[k]) == FALSE)
+      {
+       df_CombinedData$SampleGWt[k] = df_CombinedData$SampleGWt[k] + df_CombinedData$maturegrainDW[k]
+      }
+   }
+
+}
+
+#Final grain Wt
+
+df_CombinedData$SampleGrainSprouted <- 0
+for (k in 1:length(df_CombinedData$Final_grainSproutedFW) ) #any column will do for length
+ {
+  if (is.na(df_CombinedData$Final_grainSproutedFW[k]) == FALSE)
+      {
+       df_CombinedData$SampleGrainSprouted[k] = df_CombinedData$Final_grainSproutedDW[k] * df_CombinedData$Final_grainFW[k]/df_CombinedData$Final_grainSproutedFW[k]
+      }
+
+  }
+df_CombinedData <- df_CombinedData %>%
+  mutate(SampleFGW = ((Final_100grainDW*Final_grainFW/Final_100grainFW)+SampleGrainSprouted)) 
+
+df_CombinedData$SampleFGW[is.nan(df_CombinedData$SampleFGW)] <- NA 
+df_CombinedData$SampleFGW[is.na(df_CombinedData$SampleFGW)] <- 0 
+
+#Total grain wt
+
+df_CombinedData <- df_CombinedData %>%  mutate(SampleGrainWT = (SampleFGW+ SampleGWt))
+
+```
+
+
+
+#Summary mean and se grouped by site, treatment and clock as function
+```{r, sum_elemant function}
+
+sum_it<- function(frame=df_CombinedData,var1 ){
+  sum_mean<- df_CombinedData%>% 
+  group_by(Date,Trt_name, Site) %>% 
+  summarise_at(.vars = var1,funs(mean,se=sd(.)/sqrt(n())))
+  
+#print(sum_mean)
+}
+
+
+```
+
+#sunction to draw line graphs with error bars
+```{r, graphing function}
+plot_it<- function(frame=df_CombinedData,var1){
+  sum_mean <- sum_it(var1 = var1)
+  it_plot <- ggplot(data=sum_mean, aes(x=Date,y=mean, colour=Trt_name, shape=Site))+
+    geom_point()+
+    geom_line()+ 
+    geom_errorbar(aes(ymin=mean-se,ymax=mean+se))+
+    facet_grid(~Site)
+  
+  it_plot
+}
+
+<<<<<<< HEAD
+plot_it(var1="SampleGrainWT")
+=======
+
+```
+look at some data
+```{r}
+Psum <- plot_it(var1="grainDW")
+
+plot_it(var1="GrainWT")
+>>>>>>> af3c0e48e6df195b712a7348c1cfd32786043041
+
+
+Psum
+```
+
+
+
+
+

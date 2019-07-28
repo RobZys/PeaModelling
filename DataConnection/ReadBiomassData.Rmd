@@ -1,0 +1,573 @@
+---
+title: "Transforming Pea data into observed data for sims discovery science"
+author: "R Zyskowski , Adrain Hunt"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+
+  
+---
+
+## Step one read data from Excel File
+
+Key processes:
+
+- Reads  *Technically correct* data into `data.frame`
+
+- Combines the Lincoln & Hawke's bay data
+
+
+#### Data management
+
+```{r, results='hide', echo=FALSE, include=FALSE}
+
+rm(list=setdiff(ls(), "source_rmd")) #remove all objects but "source_rmd" from the environment before assigning the new objects .. this is especially included to use this script as a child script in the MainScript.Rmd file 
+
+#rm(list = ls(all = TRUE))
+
+```
+
+Load the required libraries.
+
+
+```{r, warning=FALSE}
+# load the required libraries
+library(lubridate)
+library(plyr);library(dplyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(magrittr) #required to use the pipe (%>%) operator
+library(readxl)
+library(tidyverse)
+
+```
+
+
+** Set the directories and Data File**
+```{r}
+url <- "https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame.aspx?sourcedoc=/project/P442060-13/Research/18_19_SAE_pea_protein_managment.xlsx&action=default"
+
+Source_HB = "RAW_HB"
+Source_Linc = "RAW_Lincoln"
+
+```
+
+
+### Create the Raw Data files
+
+
+```{r}
+source(file = "../IplantScrape.r") #source scraper function 
+
+df_RAW_Lincoln<- scrape_xl(url, sheet = Source_Linc, skip = 2)
+df_RAW_HB<- scrape_xl(url, sheet =  Source_HB, skip = 2)
+
+
+df_RAW_HB$Index  <- NULL
+df_RAW_Lincoln$Index  <- NULL
+#name contains &
+names(df_RAW_Lincoln)[38] <- "FinalPodPeaFW"
+#set column as numeric
+df_RAW_HB$partFW <- as.numeric(as.character(df_RAW_HB$partFW)) 
+
+
+```
+
+#### Inspection of loaded data set
+
+```{r}
+#Retrieve the classes of all columns in a data.frame 
+str(df_RAW_Lincoln)
+```
+
+
+
+```{r}
+str(df_RAW_HB)
+```
+
+
+
+```{r}
+summary(df_RAW_HB)
+```
+
+
+
+
+
+```{r}
+head(df_RAW_HB)
+```
+
+
+### Removing rows with NAs (missing values) in `data.frame`
+
+```{r}
+# Remove rows with NAs in data.frame
+#df_HBData <- df_RAW_HB[!complete.cases(df_RAW_HB), ]
+df_HBData <- df_RAW_HB
+na.omit(df_HBData)
+
+df_LincolnData <- df_RAW_Lincoln
+na.omit(df_LincolnData)
+
+#head(df_HBData)
+
+```
+
+### Add column Represeint Site
+```{r}
+df_HBData$Site = "HawkesBay"
+df_LincolnData$Site = "Lincoln"
+
+```
+```{r}
+df_HBData$partFW <- as.numeric(as.character(df_HBData$partFW)) 
+df_HBData$maturepodFW <- as.numeric(as.character(df_HBData$maturepodFW)) 
+df_HBData$maturepodDW <- as.numeric(as.character(df_HBData$maturepodDW)) 
+df_LincolnData$maturepodFW <- as.numeric(as.character(df_LincolnData$maturepodDW)) 
+
+
+```
+
+### Merge the Two Dataframes based on Common factors
+```{r}
+df_CombinedData  <- bind_rows(df_HBData,df_LincolnData)
+
+head(df_CombinedData)
+
+```
+### Fix up Columns to match Both
+```{r}
+# Sample Fresh Weight
+   # we need to know the Fesh weight of the sample for the measure area.
+df_CombinedData$SampleFW = df_CombinedData$TFW
+
+   # we need to know how much of the partition was used for subsample
+df_CombinedData$PARTFW = df_CombinedData$partFW
+
+
+for (k in 1:length(df_CombinedData$TFW) ) #any column will do for length
+ {
+  #Choose out of FW1 & 2 for HB
+  if (is.na(df_CombinedData$TFW2[k]) == FALSE)
+  {
+    if (is.na(df_CombinedData$TFW[k]) == TRUE)
+      {
+       df_CombinedData$SampleFW[k] = df_CombinedData$TFW2[k] 
+      }
+  }
+  
+  #if final harvest
+  #HB
+  if (isTRUE( df_CombinedData$Final_residueFW[k] > 0) )       
+   {
+   
+    df_CombinedData$PARTFW[k] = ((df_CombinedData$Final_residueFW[k] + df_CombinedData$Final_podFW[k] +df_CombinedData$Final_grainFW[k]))# + df_CombinedData$Final_grainSprouted[k]))
+   }
+  #lincoln
+  if (isTRUE( df_CombinedData$Final_ResidueSubFW[k] > 0) )       
+   {
+   
+    df_CombinedData$PARTFW[k] = ((df_CombinedData$Final_ResidueSubFW[k] + df_CombinedData$FinalPodPeaFW[k]))#+ df_CombinedData$Final_grainSprouted[k]))
+   }
+ 
+}
+
+
+
+#SampleDW
+
+# leaf & stem
+df_CombinedData$SampleLeafDW <- df_CombinedData$greenleafDW
+df_CombinedData$SampleStemDW <- df_CombinedData$greenstemDW
+df_CombinedData$SamplePodDW <- df_CombinedData$greenpodDW
+
+# Dead leaf and Stem
+df_CombinedData$SampleDeadDW <- df_CombinedData$deadFW
+
+for (k in 1:length(df_CombinedData$SampleDeadDW) ) #any column will do for length
+ {
+   if (is.na(df_CombinedData$SampleDeadDW[k]) == TRUE)
+      {
+       df_CombinedData$SampleDeadDW[k] = df_CombinedData$deadstemDW[k] + df_CombinedData$deadleafDW[k]
+      }
+    if (is.na(df_CombinedData$SampleDeadDW[k]) == TRUE)
+      {
+       df_CombinedData$SampleDeadDW[k] = 0
+      }
+ 
+
+}
+
+#plant pop to plants per m^2
+df_CombinedData$PP <- df_CombinedData$PP/df_CombinedData$HA
+
+
+# Intermediate Grain 
+df_CombinedData$SampleGWt = df_CombinedData$grainDW
+
+
+for (k in 1:length(df_CombinedData$grainDW) ) #any column will do for length
+ {
+   if (is.na(df_CombinedData$grainDW[k]) ==TRUE)
+   {
+   
+   if (is.na(df_CombinedData$greengrainDW[k]) == FALSE)
+      {
+       df_CombinedData$SampleGWt[k] =  df_CombinedData$greengrainDW[k]
+      }
+
+   #Add mature
+      if (is.na(df_CombinedData$maturegrainDW[k]) == FALSE)
+      {
+       df_CombinedData$SampleGWt[k] = df_CombinedData$SampleGWt[k] + df_CombinedData$maturegrainDW[k]
+      }
+   }
+
+}
+
+
+#Total Pod/shell weight
+ df_CombinedData$maturepodFW[is.na(df_CombinedData$maturepodFW)] <- 0
+ df_CombinedData$maturepodDW[is.na(df_CombinedData$maturepodDW)] <- 0
+
+ df_CombinedData <-  df_CombinedData %>%
+   mutate(SampleShellWt = (greenpodDW+maturepodDW)) 
+
+
+#Final grain Wt
+
+ df_CombinedData$Final_grainSproutedDW[is.na(df_CombinedData$Final_grainSproutedDW)] <- 0 
+ df_CombinedData$Final_grainFW[is.na(df_CombinedData$Final_grainFW)] <- 0
+ df_CombinedData$grainDW[is.na(df_CombinedData$grainDW)] <- 0
+
+
+# df_CombinedData$SampleGrainSprouted <- 0
+# for (k in 1:length(df_CombinedData$Final_grainSproutedFW) ) #any column will do for length
+#  {
+#   if (is.na(df_CombinedData$Final_grainSproutedFW[k]) == FALSE)
+#       {
+#        df_CombinedData$SampleGrainSprouted[k] = df_CombinedData$Final_grainSproutedDW[k] * df_CombinedData$Final_grainFW[k]/df_CombinedData$Final_grainSproutedFW[k]
+#       }
+# 
+#   }
+# df_CombinedData <- df_CombinedData %>%
+#   mutate(SampleFGW = ((Final_100grainDW*Final_grainFW/Final_100grainFW)))#+SampleGrainSprouted)) 
+# 
+# df_CombinedData$SampleFGW[is.nan(df_CombinedData$SampleFGW)] <- NA 
+# df_CombinedData$SampleFGW[is.na(df_CombinedData$SampleFGW)] <- 0 
+# 
+# df_CombinedData$SampleGWt[is.nan(df_CombinedData$SampleGWt)] <- NA 
+# df_CombinedData$SampleGWt[is.na(df_CombinedData$SampleGWt)] <- 0 
+
+#Total grain wt
+ 
+# let try it the % way
+ 
+#% of grain that is spouted
+df_CombinedData <-  df_CombinedData %>%
+   mutate(SpoutedPC = (Final_grainSprouted/Final_GrainCount)) 
+ 
+ df_CombinedData$SpoutedPC[is.na(df_CombinedData$SpoutedPC)] <- 0 
+ 
+ df_CombinedData <- df_CombinedData %>%
+   mutate(SampleAveWt = ((Final_100grainDW)/100))  # What is the non sprouted average weight
+ 
+ 
+df_CombinedData <- df_CombinedData %>%
+   mutate(SampleFGW = SampleAveWt * Final_GrainCount)  # What is sample total
+ 
+ 
+ 
+ df_CombinedData$SampleGWt[is.nan(df_CombinedData$SampleGWt)] <- NA 
+ df_CombinedData$SampleGWt[is.na(df_CombinedData$SampleGWt)] <- 0
+
+df_CombinedData$SampleFGW[is.nan(df_CombinedData$SampleFGW)] <- NA 
+ df_CombinedData$SampleFGW[is.na(df_CombinedData$SampleFGW)] <- 0
+
+df_CombinedData <- df_CombinedData %>%  mutate(SampleGrainWT = (SampleFGW+ SampleGWt))
+
+```
+
+# have sample values - need plot values g/m2
+```{r}
+# Biomass
+df_CombinedData <-  df_CombinedData %>%
+   mutate(PC = (SampleFW/PARTFW)) %>%
+   mutate(perM = (PC/HA)) %>%
+   mutate(partDW = (SampleLeafDW + SampleStemDW + SampleDeadDW  + SamplePodDW + maturepodDW + SampleGrainWT)) %>%
+   mutate(AboveGroundWt = (perM*partDW) )%>%
+  mutate(leafLiveWt = perM*(SampleLeafDW)) %>%
+   mutate(StemLiveWt = perM*(SampleStemDW)) %>%
+  mutate(DeadWt = perM*(SampleDeadDW)) %>%
+   mutate(PodLiveWt = perM*(SamplePodDW)) %>%
+   mutate(ShellWt = perM*(SampleShellWt)) %>%
+   mutate(GrainWt = (SampleGrainWT)/HA) %>%  #already done the PARTFW in above
+   mutate(GrainLiveWt = perM*(SampleGWt)) 
+   
+
+# Green area
+
+ df_CombinedData$SampleFGW[is.na(df_CombinedData$Leaf_area)] <- 0
+ df_CombinedData$SampleFGW[is.na(df_CombinedData$Stem_area)] <- 0
+ df_CombinedData$SampleFGW[is.na(df_CombinedData$Pod_area)] <- 0
+
+ df_CombinedData <-  df_CombinedData %>%
+   mutate(LeafArea = perM*(Leaf_area)) %>%  #cm2
+   mutate(leafLAI = (LeafArea/10000)) %>% #m
+   mutate(StemArea = perM*(Stem_area)) %>%  #cm2
+   mutate(stemGAI = (StemArea/10000)) %>% #m
+   mutate(PodArea = perM*(Pod_area)) %>%  #cm2
+   mutate(podGAI = (PodArea/10000)) %>% #m
+   mutate(GAI = (leafLAI + stemGAI+podGAI)) #m/m
+
+
+```
+### we have biomass so cancaluclate N levels
+
+```{r}
+#N content  
+  
+df_CombinedData$N_Content_Green_Leaf[df_CombinedData$N_Content_Green_Leaf == "-"] <- NA 
+
+df_CombinedData$N_Content_Green_Leaf <- as.numeric(as.character(df_CombinedData$N_Content_Green_Leaf)) 
+
+df_CombinedData$N_Content_Green_Stem[df_CombinedData$N_Content_Green_Stem == "-"] <- NA 
+
+df_CombinedData$N_Content_Green_Stem <- as.numeric(as.character(df_CombinedData$N_Content_Green_Stem)) 
+
+df_CombinedData$N_Content_Green_Grain[df_CombinedData$N_Content_Green_Grain == "-"] <- NA 
+df_CombinedData$N_Content_Green_Grain <- as.numeric(as.character(df_CombinedData$N_Content_Green_Grain)) 
+df_CombinedData$N_Content_Mat_Grain[df_CombinedData$N_Content_Mat_Grain == "-"] <- NA 
+df_CombinedData$N_Content_Mat_Grain <- as.numeric(as.character(df_CombinedData$N_Content_Mat_Grain)) 
+
+df_CombinedData$N_Content_Mat_Pod[df_CombinedData$N_Content_Mat_Grain == "-"] <- NA 
+df_CombinedData$N_Content_Mat_Pod <- as.numeric(as.character(df_CombinedData$N_Content_Mat_Pod)) 
+
+df_CombinedData$N_Content_Green_Pod[df_CombinedData$N_Content_Mat_Grain == "-"] <- NA 
+df_CombinedData$N_Content_Green_Pod <- as.numeric(as.character(df_CombinedData$N_Content_Green_Pod)) 
+
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(LeafNConc = N_Content_Green_Leaf/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(leafN = LeafNConc * leafLiveWt )
+   
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(StemNConc = N_Content_Green_Stem/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(StemN = StemNConc *StemLiveWt )
+
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(GrainNConc = N_Content_Green_Grain/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(GrainLiveN = GrainNConc*GrainLiveWt )
+
+  df_CombinedData <-  df_CombinedData %>%
+    mutate(GrainMatureNConc = N_Content_Mat_Grain/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(GrainMatureN = GrainMatureNConc * GrainWt )
+ 
+df_CombinedData <- df_CombinedData %>%  
+  mutate(Grain_crudeP=GrainMatureN*6.25)
+ 
+ 
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(PodNConc = N_Content_Green_Pod/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(PodLiveN = PodNConc*PodLiveWt )
+
+  df_CombinedData <-  df_CombinedData %>%
+    mutate(PodMatureNConc = N_Content_Mat_Pod/100.0)
+ df_CombinedData <-  df_CombinedData %>%
+    mutate(PodMatureN = PodMatureNConc * ShellWt )
+
+
+  
+
+  
+```
+# For testing purposes lets group the midnatch days at HB
+```{r}
+# for (k in 1:length(df_CombinedData$Date) ) 
+#  {
+#    tmp <- df_CombinedData$Date[k] 
+#   if (isTRUE( tmp == as.Date("2019-01-25") ))       
+# #   if (tmp = "2019-01-25")  
+#    {
+#     df_CombinedData$Date[k] <- as.Date("2019-01-23")
+#    }
+# 
+# }
+
+# for exaoning purposes let separate the data
+  df_CombinedDataHB <-  df_CombinedData[df_CombinedData$Site == "HawkesBay",]
+  df_CombinedDataHB1 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 1,]
+  df_CombinedDataHB2 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 2,]
+  df_CombinedDataHB3 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 3,]
+  df_CombinedDataHB4 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 4,]
+  df_CombinedDataHB5 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 5,]
+  df_CombinedDataHB6 <-  df_CombinedDataHB[df_CombinedDataHB$Trt_num == 6,]
+  
+```
+
+#Summary mean and se grouped by site, treatment and clock as function
+```{r, sum_elemant function}
+
+sum_it<- function(frame=df_CombinedData,var1 ){
+  sum_mean<- df_CombinedData%>% 
+  group_by(Date,Trt_name, Site) %>% 
+  summarise_at(.vars = var1,funs(mean,se=sd(.)/sqrt(n())))
+  
+print(sum_mean)
+}
+
+
+```
+
+#function to draw line graphs with error bars
+```{r, graphing function}
+plot_it<- function(frame=dataset_name,var1){
+  sum_mean <- sum_it(var1 = var1)
+  it_plot <- ggplot(data=sum_mean, aes(x=Date,y=mean, colour=Trt_name, shape=Site))+
+    geom_point()+
+    geom_line()+ 
+    geom_errorbar(aes(ymin=mean-se,ymax=mean+se))+
+    facet_grid(Site~.)
+  
+  it_plot
+}
+
+
+```
+look at some data
+```{r, key plots}
+
+p.pop <- plot_it(var1="PP")
+p.pop+ylim(0,120)+ylab("Plant population (plants/m^2)")
+
+
+p.leafLAI <- plot_it(var1="leafLAI")
+p.leafLAI +ylab("LAI (m^2/m^2)")+ylim(0,6)
+
+
+p.stema <- plot_it(var1="stemGAI")
+p.stema +ylab("Stem GAI (m^2/m^2)")+ylim(0,6)
+
+
+
+
+p.poda <- plot_it(var1="podGAI")
+p.poda +ylab("Pod GAI (m^2/m^2)")+ylim(0,6)
+
+
+#something about total green area and the proportion contributed by leaf, stem and pod?
+
+####p.greena <- plot_it(var1="")
+
+
+
+
+p.GrainWt <- plot_it(var1="GrainWt")
+p.GrainWt     #needs units, seems supper rapid?
+
+
+p.StemN <- plot_it(var1="StemN")
+p.StemN+ylab("Stem N (g/m^2)")
+
+P.leafN <- plot_it(var1="leafN")
+P.leafN+ylab("Leaf N (g/m^2)")
+
+
+
+p.GrainLiveN<- plot_it(var1="GrainLiveN")
+p.GrainLiveN
+
+
+
+p.GrainMatureN <- plot_it(var1="GrainMatureN")
+p.GrainMatureN
+
+
+
+P.LeafNConc <- plot_it(var1="LeafNConc")
+P.LeafNConc+ylab("Leaf N content (g N/g DW)")
+
+
+
+P.StemNConc <- plot_it(var1="StemNConc")
+P.StemNConc+ylab("Stem N content (g N/g DW)")
+
+
+P.GrainNConc <- plot_it(var1="GrainNConc")
+P.GrainNConc+ylab("Grain N content (g N/g DW)")
+
+P.GrainMatureNConc <- plot_it(var1="GrainMatureNConc")
+P.GrainMatureNConc+ylab("Grain N content (g N/g DW)")
+
+p.final_grain_N <- (sum_it(var1="GrainMatureNConc")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")
+p.final_grain_N + ylab("Final Grain N conc (g N/g DW)")
+
+
+###
+pbox.final_grain_N <- (df_CombinedData) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=GrainMatureNConc, colour=Site, shape=Trt_name))+geom_point(position="dodge")+geom_boxplot()
+pbox.final_grain_N + ylab("Final Grain N conc (g N/g DW)")
+###
+
+p.final_grain_Wt <- (sum_it(var1="GrainWt")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")
+p.final_grain_Wt + ylab("Final Grain weight (g m^2)")
+
+p.GrainMatureN <- (sum_it(var1="GrainMatureN")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")
+p.GrainMatureN + ylab("GrainMatureN (g m^2)")
+
+p.Grain_crudeP <- (sum_it(var1="Grain_crudeP")) %>% filter(Date>"2019-01-22") %>% ggplot(.,aes(x=Trt_name, y=mean, colour=Site, shape=Trt_name))+geom_bar(stat="identity", position="dodge")+geom_errorbar(aes(ymin=mean-se,ymax=mean+se),position="dodge")
+p.Grain_crudeP + ylab("Grain Crude Protein yield (g m^2)")
+
+#leaf stem and pod area for potneital light interception
+
+#greain weight
+
+#grain #/protein
+
+#node number,  leaf number
+
+
+
+
+```
+
+
+
+```{r,tests}
+t.final_grain_N <- (df_CombinedData) %>% filter(Date>"2019-01-22") %>% filter(Trt_name %in% c("CB_E_0N", "CB_E_EN", "CB_E_LN"))  %>% 
+  lm(.,formula= Grain_crudeP ~ as.factor(N_timing)*Site)
+
+
+summary(t.final_grain_N)
+
+summary.aov(t.final_grain_N)
+#*factor(Site)*factor(N_timing)*factor(Sowing_Date)++factor(Block)) %>%filter(Site=="Lincoln")
+```
+
+```{r}
+ #save consist data for report and analysis
+ 
+# # gather all variable in one column and values..
+dataset_name <- "Pea_Biomass_N_LAI" # needed to name the outputfiles consistently (labels, consistent and apsim .txt)
+# # # 
+  SourceRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
+  DestRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
+# # # 
+  cd_Path <- paste0(DestRootDir, "ObservedData_",dataset_name,".txt")
+# # # 
+  write.table(df_CombinedData,cd_Path , row.names = F, quote = F, sep = '\t')
+# # #print(cd_Path)
+
+```
+
+
+
+

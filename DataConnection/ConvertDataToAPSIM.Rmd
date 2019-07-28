@@ -1,0 +1,107 @@
+---
+title: "ConvertDataToAPSIM"
+author: "RFZ"
+date: "21 May 2019"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+### Read data - requires ReadbiomassData to be run first
+
+
+```{r }
+#Read consist data for report and analysis
+
+library(lubridate)
+library(plyr);library(dplyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(magrittr) #required to use the pipe (%>%) operator
+library(readxl)
+library(tidyverse)
+
+
+ 
+ SourceRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
+ DestRootDir<- "C:\\GithubRepos\\PeaModelling\\DataConnection\\"
+ dataset_name <- "Pea_Biomass_N_LAI" # needed to name the outputfiles consistently (labels, consistent and apsim .txt)
+
+# 
+ cd_Path <- paste0(DestRootDir, "ObservedData_",dataset_name,".txt")
+# 
+#df_obsData <- data_frame()
+df_obsData <- read.table(cd_Path , header = TRUE,  sep = '\t')
+# #print(cd_Path)
+
+
+```
+
+## Sumerise Reps
+
+
+```{r  echo=FALSE}
+
+df_DataSum<- df_obsData %>% 
+  group_by(Site,Date,Trt_name) %>%  
+
+ summarise_if(is.numeric,funs(mean))
+  
+   
+summary(df_DataSum)
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+### Lets get a list of the Columns I want
+
+```{r}
+VariableList <- c("Site","Date","Trt_name","Trt_num","LeafArea","Stem_area","Pod_area","AboveGroundWt","leafLiveWt","StemLiveWt","DeadWt","PodLiveWt","GrainWt","GrainLiveWt","LeafNConc","leafN","StemNConc","StemN","GrainNConc")
+
+df_ReqData <- df_DataSum[,VariableList]
+
+df_ReqData [is.numeric(df_ReqData) & is.na(df_ReqData)] <- "*"
+
+```
+
+### now save in a form for apsim
+
+```{r}
+write.table(df_ReqData,  cd_Path <- paste0(DestRootDir, "PeaSumData.txt"), row.names = F, quote = F, sep = '\t')
+```
+
+
+### usefull relationships
+```{r}
+
+LAlinearMod <- lm(LeafArea ~ leafLiveWt, data=df_DataSum)  # build linear regression model on full data
+summary(LAlinearMod)
+ggplot(data=df_DataSum, aes(x=StemLiveWt,y=LeafArea, colour=Trt_name, shape=Site))+
+    geom_point()+
+    geom_line()+ 
+     facet_grid(~Site)
+
+
+SAlinearMod <- lm(StemArea ~ StemLiveWt, data=df_DataSum)  # build linear regression model on full data
+summary(SAlinearMod)
+ggplot(data=df_DataSum, aes(x=StemLiveWt,y=StemArea, colour=Trt_name, shape=Site))+
+    geom_point()+
+    geom_line()+ 
+     facet_grid(~Site)
+
+```
+
