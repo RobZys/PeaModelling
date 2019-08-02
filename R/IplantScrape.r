@@ -1,5 +1,19 @@
-library(readxl)
-library(tidyverse)
+
+#' scrape_xl
+#'
+#' @author Blake List
+#' @source PlantandFoodResearch/PFRTextMiner
+#' @param url 
+#' @param sheet 
+#' @param skip 
+#'
+#' @return
+#' @import readxl
+#'         tidyverse
+#'
+#' @export
+#'
+
 
 scrape_xl <- function(url = NULL, sheet = NULL, skip = NULL) {
   
@@ -37,7 +51,7 @@ scrape_xl <- function(url = NULL, sheet = NULL, skip = NULL) {
   if (httr::http_error(httr::GET(url_fmt)) == 404L) {
     stop("Url does not exist")
   }
-  username <- Sys.getenv("USER")
+  username <- Sys.getenv("USERNAME")
   if (Sys.getenv("PASSWORD") == "") {
     Sys.setenv("PASSWORD" = getPass::getPass(paste0(username,
                                                     ", enter your password")))
