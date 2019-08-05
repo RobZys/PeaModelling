@@ -1,0 +1,256 @@
+---
+title: '20190805'
+author: "Jian"
+date: "05/08/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r pkgs}
+library(readxl)
+library(tidyverse)
+library(lubridate)
+source("R/IplantScrape.r")
+
+replace_0 <- function(x) {x = ifelse(x == 0, NA, x);x} # 0s present in Lincoln data, convert to NAs
+
+```
+
+```{r raw data}
+url <- "https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame.aspx?sourcedoc=/project/P442060-13/Research/18_19_SAE_pea_protein_managment.xlsx&action=default"
+Source_HB = "RAW_HB"
+Source_Linc = "RAW_Lincoln"
+
+# Use the function scrape_list to extract the table from iPlant as a dataframe.
+df_lincoln <- scrape_xl(url = url, sheet = Source_Linc, skip = 2)
+df_HB <- scrape_xl(url = url, sheet = Source_HB, skip = 2)
+# url <- "https://iplant.plantandfood.co.nz/project/I180822/Research/Forms/AllItems.aspx"
+# PFRTextMiner::scrape_file(url, dest = "./Data/")
+# PFRTextMiner::scrape_list(url) # not working
+
+# repair the name and glimpse the structure of the data
+df_lincoln %>% 
+  mutate(Index = Source_Linc) %>%
+  as_tibble(.name_repair = "universal") %>% 
+  glimpse()
+
+# vars start with N are not numeric 
+# need to replace the `-` by NA and change type
+LN <- df_lincoln %>% 
+  as_tibble(.name_repair = "universal") %>% 
+  mutate(Index = Source_Linc) %>%
+  mutate_at(vars(starts_with("N_")), as.double)
+
+HB <- df_HB %>% 
+  as_tibble(.name_repair = "universal") %>% 
+  mutate(Index = Source_HB,
+         maturepodFW = as.numeric(maturepodFW),
+         maturepodDW = as.numeric(maturepodDW)) %>% 
+  mutate_at(vars(starts_with("N_")), as.double)
+
+
+
+# combined_raw <- bind_rows(LN, HB) %>% 
+  # mutate(Index = gsub("RAW\\_","", Index))
+
+```
+
+# fix lincoln variable names 
+
+```{r lincoln variable names }
+LN %>% 
+  colnames()
+```
+
+[Protocol](https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame2.aspx?sourcedoc=/project/P442060-13/Research/Protocol_plant_protein_2018-19.docx&action=default)
+[Variable Names](https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame.aspx?sourcedoc=/project/P442060-13/Research/18_19_SAE_pea_protein_managment.xlsx&action=default)
+
+_note_:
+
+1. **could ignore the Final_Pod.PeaFW because it is supposed to be the sum of Final_podFW  and Final_grainFW**
+
+2. **no 5 plants partitioning at the final harvest**
+
+##Figure out the mismatch variable names 
+
+```{r}
+
+
+setdiff(colnames(LN), colnames(HB))
+setdiff(colnames(HB), colnames(LN))
+
+```
+
+
+
+```{r}
+LN_renamed <- LN %>% 
+  mutate(deadFW = deadleafFW + deadstemFW, 
+         deadDW = deadleafDW + deadstemDW, 
+         N_Content_Dead = N_Content_Dead_Stem + N_Content_Dead_Leaf,
+         Pea_num = GreenPeaNum + MaturePeaNum,
+         Pod_num = Final_Pod_num) %>% 
+  select( -Final_Pod.PeaFW, -contains("PeaNum"), -Final_Pod_num, -contains("deadleaf"), -contains("deadstem"), -N_Content_Dead_Stem, -N_Content_Dead_Leaf)
+  
+
+HB_renamed <- HB %>% 
+  rename(greengrainFW = grainFW,
+         greengrainDW = grainDW,
+         Final_ResidueSubFW = Final_residueFW,
+         Final_ResidueSubDW = Final_residueDW) %>% 
+  mutate_if(is.numeric, ~ replace_na(., 0)) %>%  # na causes trouble to calcualte final component 
+  mutate(TFW = ifelse(TFW == 0, TFW2, TFW),
+         Final_grainFW = ifelse(Final_grainFW_hb2 == 0, Final_grainFW, Final_grainFW_hb2 + Final_grainSproutedFW )) %>% 
+  select(-TFW2, -Final_grainFW_hb2)
+
+setdiff(colnames(LN_renamed), colnames(HB_renamed))
+
+setdiff(colnames(HB_renamed), colnames(LN_renamed))
+
+combined <- bind_rows(LN_renamed, HB_renamed)  %>% 
+  mutate(Index = gsub("RAW_","", Index))
+
+```
+
+##### extra colnames from HB, not present in Lincoln 
+
+**"final_grainsprouted"   **
+**"final_grainsproutedfw" **
+**"final_greenpodnumber" **
+**"final_greenpodfw"     **
+**"final_greenpoddw"**
+**"final_grainsprouteddw"**
+
+
+# plant organ to whole plant 
+
+```{r necessary variables}
+whole_plant <- combined %>% 
+  mutate_if(is.numeric, ~ replace_na(.,0)) %>%  # replace NAs by 0 for adding organs up
+  mutate(# subsample fresh/dry weight 
+         SSFW = ifelse(SSFW == 0, Final_ResidueSubFW + Final_podFW + Final_grainFW, SSFW),
+         Final_grainDW = (Final_100grainDW/100) * Final_GrainCount, # this is the problem that makes the graindw is greater than fw
+         SSDW = ifelse(SSDW == 0, (Final_ResidueSubDW + Final_podDW + Final_grainDW),SSDW),
+    
+         # partitioning
+         partFW = greenleafFW + greenstemFW + deadFW + greenpodFW + greengrainFW + maturepodFW + maturegrainFW,
+         partDW = greenleafDW + greenstemDW + deadDW + greenpodDW + greengrainDW + maturepodDW + maturegrainDW,
+         
+         # green area for light interception
+         green_Area = Leaf_area + Stem_area + Pod_area,
+         
+         # grain weight
+         grainFW = greengrainFW + maturegrainFW,
+         grainDW = greengrainDW + maturegrainDW,
+         grainFW = ifelse(grainFW == 0, Final_grainFW, grainFW),
+         grainDW = ifelse(grainDW == 0, Final_grainDW, grainDW)
+
+  ) 
+
+whole_plant %>% 
+  select(Index, Date, Event, Block, Plot, Trt_name, HA, PP, TFW, SSFW, SSDW, partFW, partDW, green_Area) %>% 
+  ggplot(aes(SSFW, SSDW, color = Event))+
+  geom_point()+
+  facet_grid(~ Index) 
+whole_plant %>% 
+  ggplot(aes(partFW, partDW, color = Event))+
+  geom_point()+
+  facet_grid(~ Index) 
+```
+
+**Harvest 3 in HB has no SSDW**
+Need to calculate from the Part dm percentage
+
+
+```{r overall dm percentage}
+
+whole_plant %>% 
+  mutate(partDM_PC = partDW/partFW,
+         SSDM_PC = SSDW/ SSFW) %>%  
+  ggplot(aes(partDM_PC, SSDM_PC))+
+  geom_point()+
+  geom_smooth( method = "lm", se = F) + 
+  facet_grid(~ Index) +
+  geom_text(aes(label = Plot), nudge_y = 0.05, check_overlap = T)
+whole_plant %>% 
+  mutate(partDM_PC = partDW/partFW,
+         SSDM_PC = SSDW/ SSFW) %>% 
+  filter(Plot == 17) %>% 
+  select(SSDM_PC, partDM_PC, Plot, Index, Date, Event)
+```
+
+**the overall whole plant dry matter percentage in partitioning sample generally agrees with the subsample dry mater percentage. But plot 17 in Lincoln may need to pay attention**
+
+**plot 17 seems to have trouble to procude any green leaf and stem when harvested at 2019-01-21**
+
+```{r checking errors}
+whole_plant %>% 
+  mutate(DM_pc = SSDW/SSFW * 100,
+         DM_pc = ifelse(DM_pc == 0, partDW/partFW*100, DM_pc)) %>% 
+  filter(DM_pc > 100) %>% 
+  select(Index,Plot, Date, Event, starts_with("Final"), DM_pc) 
+  
+```
+
+_note_
+
+1. H7 plot21 final residuedw is greater(`277.1`) than fw(`235.5`) - need to double check 
+2. SD1_final plot24 graindw is greater than grainfw due to the calculation method? average grain weight * graincount. 
+
+
+## component data checking 
+
+```{r}
+colnames(whole_plant) %>% 
+  grep("grain", x = ., value = T)
+
+whole_plant %>% 
+  mutate(grain_pc = grainDW/grainFW *100) %>% 
+  filter(grain_pc > 100) %>% 
+  select(Index, Date, Event, Plot, grainDW, grainFW, grain_pc)
+```
+
+```{r checking the parts}
+
+# this should be in a function that can checking the pairs automatically
+colnames(whole_plant) %>% 
+  grep("leaf", x = ., value = T)
+colnames(whole_plant) %>% 
+  grep("stem", x = ., value = T)
+dead_part = colnames(whole_plant) %>% 
+  grep("dead", x = ., value = T)
+
+whole_plant %>% 
+  mutate(dead_pc = deadDW/deadFW *100) %>% 
+  filter(dead_pc > 100) %>% 
+  select(Index, Date, Event, Plot, deadDW, deadFW, dead_pc)
+
+whole_plant %>% 
+  mutate(stem_pc = greenstemDW/greenstemFW *100) %>% 
+  filter(stem_pc > 100) %>% 
+  select(Index, Date, Event, Plot, greenstemDW, greenstemFW, stem_pc)
+whole_plant %>% 
+  mutate(leaf_pc = greenleafDW/greenleafFW *100) %>% 
+  filter(leaf_pc > 100) %>% 
+  select(Index, Date, Event, Plot, greenleafDW, greenleafFW, leaf_pc)
+
+```
+
+
+## component calculation
+
+**should I use partitioning sample weight to calculate the proportion of subsample in total sample or the subsample weight or both**
+
+
+```{r}
+whole_plant %>% 
+  mutate(SSDW_pc = SSDW/SSFW ) %>% 
+  ggplot(aes(Date, SSDW_pc, color = Cultivar))+
+  geom_point() +
+  facet_grid(~ Index) +
+  geom_text(aes(label = Plot), check_overlap = T, nudge_y = 0.05)
+```
+
