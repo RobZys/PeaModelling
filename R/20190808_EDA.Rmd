@@ -1,0 +1,18 @@
+---
+title: "20190808EDA"
+author: "jian liu"
+date: "8/8/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(tidyverse)
+library(lubridate)
+```
+
+```{r import data}
+
+```
+
