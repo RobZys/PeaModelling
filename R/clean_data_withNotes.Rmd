@@ -13,9 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readxl)
 library(tidyverse)
 library(lubridate)
-source("R/IplantScrape.r")
+source("IplantScrape.r")
 
-replace_0 <- function(x) {x = ifelse(x == 0, NA, x);x} # 0s present in Lincoln data, convert to NAs
+replace_0 <- function(x) {x = ifelse(x == 0, NA, x);x}
 
 ```
 
@@ -165,6 +165,8 @@ whole_plant %>%
 Need to calculate from the Part dm percentage
 
 
+
+
 ```{r overall dm percentage}
 
 whole_plant %>% 
@@ -178,13 +180,21 @@ whole_plant %>%
 whole_plant %>% 
   mutate(partDM_PC = partDW/partFW,
          SSDM_PC = SSDW/ SSFW) %>% 
-  filter(Plot == 17) %>% 
+  filter(Plot == 11) %>% 
   select(SSDM_PC, partDM_PC, Plot, Index, Date, Event)
 ```
 
 **the overall whole plant dry matter percentage in partitioning sample generally agrees with the subsample dry mater percentage. But plot 17 in Lincoln may need to pay attention**
 
+_note_:
+1. Mike double checked plot 17, the data looks good now. 
+2. Issy also updated some values, which reduce the variability of the data. 
+
 **plot 17 seems to have trouble to procude any green leaf and stem when harvested at 2019-01-21**
+
+**plot 1, 5 and 11 in HB have higher partDM percentage** 
+11 and 5 are the same trt and cultivar but 1 is another cultivar. 
+accept the variablity and proceed with cautions!!!
 
 ```{r checking errors}
 whole_plant %>% 
@@ -197,7 +207,7 @@ whole_plant %>%
 
 _note_
 
-1. H7 plot21 final residuedw is greater(`277.1`) than fw(`235.5`) - need to double check 
+1. H7 plot21 final residuedw is greater(`277.1`) than fw(`235.5`) - need to double check - Issy checked and updated
 2. SD1_final plot24 graindw is greater than grainfw due to the calculation method? average grain weight * graincount. 
 
 
@@ -245,12 +255,33 @@ whole_plant %>%
 **should I use partitioning sample weight to calculate the proportion of subsample in total sample or the subsample weight or both**
 
 
+```{r overall treand checking}
+whole_plant %>% 
+
+  mutate(DM_pc = SSDW/SSFW ,
+         DM_pc = ifelse(DM_pc == 0, partDW/partFW, DM_pc))%>% 
+  ggplot(aes(as.Date(Date), DM_pc, color = Cultivar))+
+  geom_jitter() +
+  facet_grid(~ Index) +
+  geom_text(aes(label = Plot), check_overlap = T, nudge_x = 0.5, nudge_y = -0.05)+
+  scale_y_continuous(breaks = seq(0, 1, by = 0.2),
+                     labels = scales::percent,
+                     limits = c(0, 1.01),
+                     expand = c(0,0)) +
+  scale_x_date(date_labels = "%b %d")
+
+
+```
+
+
+**no values below 0 or above 100%**
 ```{r}
 whole_plant %>% 
-  mutate(SSDW_pc = SSDW/SSFW ) %>% 
-  ggplot(aes(Date, SSDW_pc, color = Cultivar))+
-  geom_point() +
-  facet_grid(~ Index) +
-  geom_text(aes(label = Plot), check_overlap = T, nudge_y = 0.05)
+  colnames()
+whole_plant %>% 
+  mutate_if(is.numeric, ~ replace_0(.)) %>% 
+  saveRDS(file = "../Data/cleaned_wholeset.rds")
 ```
+
+
 
