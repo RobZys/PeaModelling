@@ -1,18 +1,101 @@
 ---
-title: "20190808EDA"
-author: "jian liu"
-date: "8/8/2019"
-output: html_document
+title: "20190808_EDA"
+author: "Rob, Adrian and Jian"
+date: "`r Sys.time()`"
+output:
+  word_document: 
+    reference_docx: ../PFR_Basic_Science_Report_Template.dotm
+    toc: yes
+    toc_depth: 4
+    
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(readxl)
+knitr::opts_chunk$set(
+  cache = FALSE,
+  echo = FALSE,
+  message = FALSE,
+  warning = TRUE,
+  out.width = "100%",
+  autodep = TRUE,
+  strip.white = TRUE,
+  cache.comments = FALSE,
+  results = "hold")
+library(drake)
 library(tidyverse)
-library(lubridate)
+source("functions.R")
 ```
 
-```{r import data}
+## Read in the cleaned data
 
+browser variable names 
+
+```{r import data}
+df = drake::readd(df)
+```
+
+
+## General trend overlook
+
+```{r plot functions}
+
+scatter_it <- function(df, x = "Date", y){
+  df %>% 
+    ggplot(aes_string(x, y)) + 
+    geom_point() +
+    facet_grid(Index ~ .) +
+    theme_classic() +
+    theme(panel.border = element_rect(fill =NA))+
+    scale_y_continuous(expand = c(0, 0), name = y)
+}
+scatter_it(df, y ="SSFW")
+scatter_it(df, y ="TFW")
+scatter_it(df, y = "PP")
+
+
+bin_it <- function(df, y){
+  df %>% 
+    mutate(Date = as.Date(Date)) %>% 
+    ggplot(aes_string(x = "Date", y, group = "Date")) + 
+    geom_boxplot() +
+    facet_grid(Index ~ .) +
+    theme_classic() +
+    theme(panel.border = element_rect(fill =NA))+
+    scale_y_continuous(expand = c(0, 0)) +
+    scale_x_date(date_breaks = "2 weeks")
+}
+
+bin_it(df, y = "SSFW")
+bin_it(df, y = "grainFW")
+bin_it(df, y = "green_Area")
+```
+
+## biomass and N contents calculation
+
+1. summarise variables by using Rob's magic
+
+2. Loop over all variables
+
+```{r lappy it, fig.height=6, fig.width=8}
+
+loadd(df_calculated)
+types = sapply(df_calculated, typeof)
+
+doubles = which(types == "double")
+vars = colnames(df_calculated)[doubles][-(1:6)]
+names(vars) = vars
+df_calculated <- df_calculated %>% 
+  mutate_if(is.numeric, ~ replace_0(.))
+df_calculated %>% 
+  plot_it("Grain_crudeP_g")
+lapply(vars, function(x){
+  plot_it(df_calculated, x)
+})
+```
+```{r big summary table, echo=FALSE}
+# df_calculated %>% 
+#   group_by(Index, Date, Trt_name) %>% 
+#   summarise_at(.vars = vars, list(mean = ~mean(.,na.rm = T), se = ~  sd(.)/sqrt(n()))) 
 ```
 
