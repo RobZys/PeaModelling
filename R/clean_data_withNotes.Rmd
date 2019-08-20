@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readxl)
 library(tidyverse)
 library(lubridate)
-source("IplantScrape.r")
+source("functions.R")
 
 replace_0 <- function(x) {x = ifelse(x == 0, NA, x);x}
 
@@ -33,7 +33,7 @@ df_HB <- scrape_xl(url = url, sheet = Source_HB, skip = 2)
 
 # repair the name and glimpse the structure of the data
 df_lincoln %>% 
-  mutate(Index = Source_Linc) %>%
+  mutate(Site = Source_Linc) %>%
   as_tibble(.name_repair = "universal") %>% 
   glimpse()
 
@@ -41,7 +41,7 @@ df_lincoln %>%
 # need to replace the `-` by NA and change type
 LN <- df_lincoln %>% 
   as_tibble(.name_repair = "universal") %>% 
-  mutate(Index = Source_Linc) %>%
+  mutate(Index = "LN") %>%
   mutate_at(vars(starts_with("N_")), as.double)
 
 HB <- df_HB %>% 
@@ -54,7 +54,7 @@ HB <- df_HB %>%
 
 
 # combined_raw <- bind_rows(LN, HB) %>% 
-  # mutate(Index = gsub("RAW\\_","", Index))
+  # mutate(Site = gsub("RAW\\_","", Site))
 
 ```
 
@@ -111,7 +111,10 @@ setdiff(colnames(LN_renamed), colnames(HB_renamed))
 setdiff(colnames(HB_renamed), colnames(LN_renamed))
 
 combined <- bind_rows(LN_renamed, HB_renamed)  %>% 
-  mutate(Index = gsub("RAW_","", Index))
+  rename(Site = Index) %>% 
+  mutate(Site = gsub("RAW_","", Site),
+         Date = ymd(Date))# date should be in NZ format
+ 
 
 ```
 
@@ -124,6 +127,17 @@ combined <- bind_rows(LN_renamed, HB_renamed)  %>%
 **"final_greenpoddw"**
 **"final_grainsprouteddw"**
 
+# METADATA 
+```{r}
+metadata <- combined %>% 
+  select(Site, Date, Plot, Block, Trt_num, Trt_name, Cultivar, Sowing_Date, N_timing) %>% 
+  distinct() %>% 
+  data.table::as.data.table()
+data.table::setkey(metadata, Site, Date, Plot)
+anyDuplicated(metadata)
+
+
+```
 
 # plant organ to whole plant 
 
@@ -151,14 +165,14 @@ whole_plant <- combined %>%
   ) 
 
 whole_plant %>% 
-  select(Index, Date, Event, Block, Plot, Trt_name, HA, PP, TFW, SSFW, SSDW, partFW, partDW, green_Area) %>% 
+  select(Site, Date, Event, Block, Plot, Trt_name, HA, PP, TFW, SSFW, SSDW, partFW, partDW, green_Area) %>% 
   ggplot(aes(SSFW, SSDW, color = Event))+
   geom_point()+
-  facet_grid(~ Index) 
+  facet_grid(~ Site) 
 whole_plant %>% 
   ggplot(aes(partFW, partDW, color = Event))+
   geom_point()+
-  facet_grid(~ Index) 
+  facet_grid(~ Site) 
 ```
 
 **Harvest 3 in HB has no SSDW**
@@ -175,13 +189,13 @@ whole_plant %>%
   ggplot(aes(partDM_PC, SSDM_PC))+
   geom_point()+
   geom_smooth( method = "lm", se = F) + 
-  facet_grid(~ Index) +
+  facet_grid(~ Site) +
   geom_text(aes(label = Plot), nudge_y = 0.05, check_overlap = T)
 whole_plant %>% 
   mutate(partDM_PC = partDW/partFW,
          SSDM_PC = SSDW/ SSFW) %>% 
   filter(Plot == 11) %>% 
-  select(SSDM_PC, partDM_PC, Plot, Index, Date, Event)
+  select(SSDM_PC, partDM_PC, Plot, Site, Date, Event)
 ```
 
 **the overall whole plant dry matter percentage in partitioning sample generally agrees with the subsample dry mater percentage. But plot 17 in Lincoln may need to pay attention**
@@ -201,7 +215,7 @@ whole_plant %>%
   mutate(DM_pc = SSDW/SSFW * 100,
          DM_pc = ifelse(DM_pc == 0, partDW/partFW*100, DM_pc)) %>% 
   filter(DM_pc > 100) %>% 
-  select(Index,Plot, Date, Event, starts_with("Final"), DM_pc) 
+  select(Site,Plot, Date, Event, starts_with("Final"), DM_pc) 
   
 ```
 
@@ -220,7 +234,7 @@ colnames(whole_plant) %>%
 whole_plant %>% 
   mutate(grain_pc = grainDW/grainFW *100) %>% 
   filter(grain_pc > 100) %>% 
-  select(Index, Date, Event, Plot, grainDW, grainFW, grain_pc)
+  select(Site, Date, Event, Plot, grainDW, grainFW, grain_pc)
 ```
 
 ```{r checking the parts}
@@ -236,16 +250,16 @@ dead_part = colnames(whole_plant) %>%
 whole_plant %>% 
   mutate(dead_pc = deadDW/deadFW *100) %>% 
   filter(dead_pc > 100) %>% 
-  select(Index, Date, Event, Plot, deadDW, deadFW, dead_pc)
+  select(Site, Date, Event, Plot, deadDW, deadFW, dead_pc)
 
 whole_plant %>% 
   mutate(stem_pc = greenstemDW/greenstemFW *100) %>% 
   filter(stem_pc > 100) %>% 
-  select(Index, Date, Event, Plot, greenstemDW, greenstemFW, stem_pc)
+  select(Site, Date, Event, Plot, greenstemDW, greenstemFW, stem_pc)
 whole_plant %>% 
   mutate(leaf_pc = greenleafDW/greenleafFW *100) %>% 
   filter(leaf_pc > 100) %>% 
-  select(Index, Date, Event, Plot, greenleafDW, greenleafFW, leaf_pc)
+  select(Site, Date, Event, Plot, greenleafDW, greenleafFW, leaf_pc)
 
 ```
 
@@ -262,7 +276,7 @@ whole_plant %>%
          DM_pc = ifelse(DM_pc == 0, partDW/partFW, DM_pc))%>% 
   ggplot(aes(as.Date(Date), DM_pc, color = Cultivar))+
   geom_jitter() +
-  facet_grid(~ Index) +
+  facet_grid(~ Site) +
   geom_text(aes(label = Plot), check_overlap = T, nudge_x = 0.5, nudge_y = -0.05)+
   scale_y_continuous(breaks = seq(0, 1, by = 0.2),
                      labels = scales::percent,
@@ -276,12 +290,110 @@ whole_plant %>%
 
 **no values below 0 or above 100%**
 ```{r}
-whole_plant %>% 
-  colnames()
-whole_plant %>% 
+whole_plant <- whole_plant %>% 
   mutate_if(is.numeric, ~ replace_0(.)) %>% 
-  saveRDS(file = "../Data/cleaned_wholeset.rds")
+  mutate(Id = 1:n())
+
+
 ```
 
+# lock everything into sqlite3
+
+```{r}
+# creat SQL3 and build the connection  ------------------------------------
+con <- dbConnect(RSQLite::SQLite(),'../Data/Pea_data.sqlite3')
+dbListTables(con)
+
+# creat table to correct the type of variable -----------------------------
+
+colnames(metadata)
+dbExecute(con," CREATE TABLE `metadata` (
+  `Site` TEXT NOT NULL,
+  `Date` int NOT NULL,
+  `Plot` int NOT NULL,
+  `Block` int NOT NULL,
+  `Trt_num` int NOT NULL,
+  `Trt_name` TEXT NOT NULL,
+  `Cultivar` TEXT NOT NULL,
+  `Sowing_Date` TEXT NOT NULL,
+  `N_timing` DOUBLE,
+  PRIMARY KEY (Site, Date, Plot)
+);
+")
+
+dbExecute(con,"CREATE TABLE `biomass` (
+  `Site` TEXT,
+  `Date` REAL,
+  `Event` int NOT NULL,
+  `Plot` int NOT NULL ,
+  `Block` int NOT NULL,
+  `Trt_num` int NOT NULL,
+  `Trt_name` TEXT,
+  `Cultivar` TEXT,
+  `Sowing_Date` TEXT,
+  `N_timing` DOUBLE,
+  `HA` REAL,
+  `PP` REAL,
+  `TFW` REAL,
+  `SSFW` REAL,
+  `SSDW` REAL,
+  `partFW` REAL,
+  `greenleafFW` REAL,
+  `greenstemFW` REAL,
+  `greenpodFW` REAL,
+  `maturepodFW` REAL,
+  `greengrainFW` REAL,
+  `maturegrainFW` REAL,
+  `Leaf_area` REAL,
+  `Stem_area` REAL,
+  `Pod_area` REAL,
+  `greenleafDW` REAL,
+  `greenstemDW` REAL,
+  `greenpodDW` REAL,
+  `maturepodDW` REAL,
+  `greengrainDW` REAL,
+  `maturegrainDW` REAL,
+  `Final_ResidueSubFW` REAL,
+  `Final_podFW` REAL,
+  `Final_grainFW` REAL,
+  `Final_100grainFW` REAL,
+  `Final_ResidueSubDW` REAL,
+  `Final_podDW` REAL,
+  `Final_100grainDW` REAL,
+  `Final_GrainMoisture` REAL,
+  `Final_GrainCount` REAL,
+  `N_Content_Green_Leaf` REAL,
+  `N_Content_Green_Stem` REAL,
+  `N_Content_Green_Pod` REAL,
+  `N_Content_Mat_Pod` REAL,
+  `N_Content_Green_Grain` REAL,
+  `N_Content_Mat_Grain` REAL,
+  `N_Content_Residue` REAL,
+  `deadFW` REAL,
+  `deadDW` REAL,
+  `N_Content_Dead` REAL,
+  `Pea_num` REAL,
+  `Pod_num` REAL,
+  `Final_grainSprouted` REAL,
+  `Final_grainSproutedFW` REAL,
+  `Final_GreenPodNumber` REAL,
+  `Final_GreenPodFW` REAL,
+  `Final_greenPodDW` REAL,
+  `Final_grainSproutedDW` REAL,
+  `Final_grainDW` REAL,
+  `partDW` REAL,
+  `green_Area` REAL,
+  `grainFW` REAL,
+  `grainDW` REAL,
+  `Id` int NOT NULL,
+  PRIMARY KEY (Id)
+);")
+
+# dbWriteTable(con, name = "metadata", value = metadata, append=TRUE)
+
+dbWriteTable(con, name = "biomass", value = whole_plant, append=TRUE)
+
+DBI::dbDisconnect(con)
+```
 
 
