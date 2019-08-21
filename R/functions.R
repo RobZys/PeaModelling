@@ -1,6 +1,38 @@
 
 
 
+#' Title
+#'
+#' @param df 
+#' @param Site 
+#' @param Date 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' 
+#' 
+select_cols_soils <- function(df, Site, Date){
+  df <- df %>% 
+    select(Plot, Depth, Core_length, min_N_kgN_ha = `MinN (kg N/ha)`) %>% 
+    filter(!is.na(min_N_kgN_ha)) %>% 
+    mutate(Site = Site,
+           Date = Date)
+}
+
+#' Title
+#'
+#' @param x 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' 
+replace_0 <- function(x) {x = ifelse(x == 0, NA, x);x}
+
+
 
 #' scrape_xl
 #'

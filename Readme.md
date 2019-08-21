@@ -34,6 +34,19 @@
 
 identify the keys for combining all sheets:
 
-Date and plot are the primary key?!
+  1. Site, Date and plot are the primary key?!
+  2. Dates from different tables doesn't always match
 
 add units to the biomass graphy
+
+
+[use sql to keep the tidy data](https://jupyterhub.powerplant.pfr.co.nz/user/cflfcl/notebooks/00.jupyter_examples/UsingSQLiteWithBash.ipynb)
+
+sqlite store date as Julian day with the origin date "1970-01-01"
+need date conversion when retrive the date
+
+```
+gs_sql <- dbReadTable(con, "greenseeker")
+gs_sql %>% 
+  mutate(date = as.Date(c(17835), origin = "1970-01-01"))
+```
