@@ -135,9 +135,11 @@ whole_plant <- combined %>%
          Final_grainDW = (Final_100grainDW/100) * Final_GrainCount, # this is the problem that makes the graindw is greater than fw
          SSDW = ifelse(SSDW == 0, (Final_ResidueSubDW + Final_podDW + Final_grainDW),SSDW),
     
-         # partitioning
+         # partitioning, add final into account 
          partFW = greenleafFW + greenstemFW + deadFW + greenpodFW + greengrainFW + maturepodFW + maturegrainFW,
          partDW = greenleafDW + greenstemDW + deadDW + greenpodDW + greengrainDW + maturepodDW + maturegrainDW,
+         partFW = ifelse(partFW == 0, Final_ResidueSubFW + Final_podFW + Final_grainFW, partFW),
+         partDW = ifelse(partDW == 0, Final_ResidueSubDW + Final_podDW + Final_grainDW, partDW),
          
          # green area for light interception
          green_Area = Leaf_area + Stem_area + Pod_area,
@@ -146,7 +148,10 @@ whole_plant <- combined %>%
          grainFW = greengrainFW + maturegrainFW,
          grainDW = greengrainDW + maturegrainDW,
          grainFW = ifelse(grainFW == 0, Final_grainFW, grainFW),
-         grainDW = ifelse(grainDW == 0, Final_grainDW, grainDW)
+         grainDW = ifelse(grainDW == 0, Final_grainDW, grainDW),
+         
+         # back calculation the SSDW for Harvest 3 in HB
+         SSDW = ifelse(SSDW == 0, SSFW * (partDW/partFW), SSDW)
 
   ) 
 
@@ -568,7 +573,7 @@ dbExecute(con," CREATE TABLE `sunscan` (
 ")
 # dbWriteTable(con, name = "metadata", value = metadata, append=TRUE)
 
-dbWriteTable(con, name = "biomass", value = whole_plant, append=TRUE)
+dbWriteTable(con, name = "biomass", value = whole_plant, overwrite=TRUE)
 dbWriteTable(con, name = "soilMinN", value = soil_minN, append = TRUE)
 
 dbWriteTable(con, name = "greenseeker", value = gs,append=TRUE)
