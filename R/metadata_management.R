@@ -16,20 +16,25 @@ var_HB <- colnames(df_HB)
 
 nrow(var_names)
 var_combined <- data.table(var_names)[, Experiment := NULL]
-var_LN <- data.table(LN = var_LN)[, Site := "Lincoln"]
-var_HB <- data.table(HB = var_HB)[, Site := "HB"]
+var_LN <- data.table(LN = var_LN)[, Lincoln := "Lincoln"]
+var_HB <- data.table(HB = var_HB)[, HawkesBay := "HB"]
 
 var_LN <- merge(var_combined, var_LN, by.x = "Name", by.y = "LN", all = T , no.dups = T)
 var_combined <- merge(var_LN, var_HB, by.x = "Name", by.y = "HB", all = T , no.dups = T )
 colnames(var_combined)
 setcolorder(var_combined, colnames(var_combined)[c(1,6,7,2:5)])
-
+var_combined[, ':=' (Lincoln = ifelse(Lincoln =="Lincoln", Name, Lincoln),
+                     HawkesBay = ifelse(HawkesBay == "HB", Name, HawkesBay))][]
 
 # create a sqlite ---------------------------------------------------------
 
-con <- dbConnect(RSQLite::SQLite(),'./Pea_metadata.sqlite3')
+con <- dbConnect(RSQLite::SQLite(),'./Data/Pea_data.sqlite3')
 setkey(var_combined, Name)
 anyDuplicated(var_combined)
-dbWriteTable(con,'metadata',var_combined, overwrite = TRUE)
+
+
+# write into sqlite ------------------------------------------------------------------
+
+
+# dbWriteTable(con,'metadata',var_combined, overwrite = TRUE)
 dbReadTable(con, 'metadata')
-d
