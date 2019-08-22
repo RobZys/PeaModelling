@@ -8,7 +8,11 @@
 
 # Data 
 
-1. Plant LECO data seems already been transferred to the biomass sheet. Need to confirm with Mike
+1. Plant LECO data seems already been transferred to the biomass sheet. Need to confirm with Mike - **YES**
+
+   a. trts 1-4 (SD1) got all components done for intermediate and final harvest 
+   b. trts 5 & 6 (SD2 & 3) final harvest components only I think
+
 
 2. [Soil data](https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame.aspx?sourcedoc=/project/P442060-13/Research/PeaProtein_Soil_Test_Results_2018-19.xlsx&action=default): 
     

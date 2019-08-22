@@ -82,6 +82,12 @@ setdiff(colnames(HB), colnames(LN))
 
 ```
 
+_Note_:
+
+1. LN has deadleaf and deadstem
+2. HB only has dead for deadleaf and deadstem 
+3. dead pod is called mature pod
+
 
 
 ```{r}
@@ -146,6 +152,13 @@ whole_plant %>%
 **talked to Yong to ask for help. scan the raw data sheet for checking.**
 
 # plant organ to whole plant 
+
+_Note_:
+
+1. The final grain DW is calculated by the average 100 grain weight times grain count,
+2. is final grain count counts the sprouted ones? -- assume that it does --- need to confirm with Mike.
+
+
 
 ```{r necessary variables}
 whole_plant <- combined %>% 
