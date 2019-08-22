@@ -31,8 +31,8 @@ source("functions.R")
 
 browser variable names 
 
-```{r import data}
-df = drake::readd(df)
+```{r load data from cache}
+loadd()
 ```
 
 
@@ -44,58 +44,182 @@ scatter_it <- function(df, x = "Date", y){
   df %>% 
     ggplot(aes_string(x, y)) + 
     geom_point() +
-    facet_grid(Index ~ .) +
+    facet_grid(Site ~ .) +
     theme_classic() +
     theme(panel.border = element_rect(fill =NA))+
     scale_y_continuous(expand = c(0, 0), name = y)
 }
-scatter_it(df, y ="SSFW")
-scatter_it(df, y ="TFW")
-scatter_it(df, y = "PP")
-
+scatter_it(df_biomass, x = "SSFW" ,y ="SSDW")
+scatter_it(df_biomass, y = "PP")
+scatter_it(df_biomass, x = "grainFW", y = "grainDW")
 
 bin_it <- function(df, y){
   df %>% 
     mutate(Date = as.Date(Date)) %>% 
     ggplot(aes_string(x = "Date", y, group = "Date")) + 
     geom_boxplot() +
-    facet_grid(Index ~ .) +
+    facet_grid(Site ~ .) +
     theme_classic() +
     theme(panel.border = element_rect(fill =NA))+
     scale_y_continuous(expand = c(0, 0)) +
     scale_x_date(date_breaks = "2 weeks")
 }
 
-bin_it(df, y = "SSFW")
-bin_it(df, y = "grainFW")
-bin_it(df, y = "green_Area")
+bin_it(df_biomass, y = "SSFW")
+bin_it(df_biomass, y = "grainFW")
+bin_it(df_biomass, y = "green_Area")
+
+histogram_it <- function(df = df_biomass, y){
+  df %>% 
+    ggplot(aes_string( y)) + 
+    geom_histogram() +
+    facet_grid(Site ~ .) +
+    theme_classic() +
+    theme(panel.border = element_rect(fill =NA))
+}
+
+histogram_it(y = "SSFW")
+histogram_it(y = "TFW")
+histogram_it(y = "PP")
+histogram_it(y = "grainFW")
+histogram_it(y = "grainDW")
 ```
+
+_Note_:
+
+1. Grain weight agrees each other well.
+2. Subsample fresh weight scatter in HB.
+3. Subsample dry weight has already show the trends for 3 sowing dates.
+4. Plant population varies. 
+5. Green area developed a bit quicker in HB than it in LN as expected. 
+6. Be aware of the grainFW/DW for the final harvest are the total weight for the whole harvest area,
+   where the same is from 5/10 subsample plants in rest of the harvests.
+   However, it is safe to run calculations because the partFW/DW also match the whole harvest area. 
+
+Next step:
+
+1. calculate the DM yield of total 
+2. calculate the DM yield of grain
+3. calculate green area index
+4. calculate the N content grand total
+5. calculate the N content of grain
+6. calculate the N content of non-grain
+7. calculate the population changes
+
 
 ## biomass and N contents calculation
 
-1. summarise variables by using Rob's magic
+### 1. calculate
 
-2. Loop over all variables
+
+**Use the variable names have been defined in the grand excel**
+
+```{r}
+gTokg <- 10
+df_calculated <- df_biomass %>% 
+    mutate_if(is.numeric, ~ replace_na(.,0)) %>% 
+    mutate(Date = as.Date(Date),
+           PC = TFW/partFW, 
+           perM = PC/HA,
+           PP_m2 = PP/HA, 
+           
+           # OVERALL
+           TotalDryYield = perM * partDW, # g/m2 FOR APSIM
+           TotalWetYield = perM * TFW,
+           
+           # ORGAN
+           LeafYield = perM * greenleafDW,
+           StemYield = perM * greenstemDW,
+           GreenPodYield = perM * greenpodDW, 
+           MaturePodYield = perM * maturepodDW,
+           
+           DeadYield = perM * deadDW,
+           # ShellWt = perM * (greenpodDW + maturepodDW), # is this necessary
+           
+           ## GRAIN
+           GrainDryYield = perM * grainDW,  # total grain weight, green + mature
+           GreengrainYield = perM * greengrainDW,
+           MaturegrainYield = perM * maturegrainDW) %>% 
+    mutate(LeafArea = perM * Leaf_area, #cm2
+           leafLAI = LeafArea/10000, #m
+           StemArea = perM * Stem_area,
+           stemGAI = StemArea/10000,
+           PodArea = perM * Pod_area,
+           podGAI = PodArea/10000,
+           GAI = leafLAI + stemGAI + podGAI) %>% 
+    mutate(N_Uptake_Green_Leaf = N_Content_Green_Leaf/100.0 * LeafYield, # g N/m2
+           N_Uptake_Green_Stem = N_Content_Green_Stem/100.0 * StemYield,
+           N_Uptake_Dead = N_Content_Dead/100 * DeadYield,
+           # Pod
+           N_Uptake_Green_Pod = N_Content_Green_Pod/100 * GreenPodYield,
+           N_Uptake_Mat_Pod = N_Content_Mat_Pod/100 * MaturePodYield,
+           # Grain
+           N_Uptake_Green_Grain = N_Content_Green_Grain/100 * GreengrainYield,
+           N_Uptake_Mat_Grain = N_Content_Mat_Grain/100 * MaturegrainYield,
+           # others residue is only appear in final harvest but the weight = (TFW - grainDW - podDW) * ssdw/ssfw
+           N_Uptake_Residue =  (TFW - Final_grainFW - Final_podFW) * (SSDW / SSFW),
+           N_Uptake_Whole_Plant = N_Uptake_Green_Leaf + N_Uptake_Green_Stem + N_Uptake_Dead + N_Uptake_Green_Pod + N_Uptake_Mat_Pod + N_Uptake_Green_Grain + N_Uptake_Mat_Grain + N_Uptake_Residue,
+           # Protein
+           Grain_crudeP_g = N_Uptake_Mat_Grain*6.25)
+
+```
+
+### 2. summarise variables by using Rob's magic
+#### 2a. Loop over all variables
 
 ```{r lappy it, fig.height=6, fig.width=8}
 
-loadd(df_calculated)
-types = sapply(df_calculated, typeof)
+
+df_calculated <- df_calculated %>% 
+  mutate_if(is.numeric, ~ replace_0(.)) # replace 0 by NAs for plotting
+df_Yield <- df_calculated %>% 
+  select(Site, Date, Plot, Trt_name, Cultivar, Sowing_Date, ends_with("Yield"), Grain_crudeP_g)
+df_N_uptake <- df_calculated %>% 
+  select(Site, Date, Plot, Trt_name, Cultivar, Sowing_Date, N_timing, starts_with("N_Uptake"))
+
+
+
+types = sapply(df_Yield, typeof)
 
 doubles = which(types == "double")
-vars = colnames(df_calculated)[doubles][-(1:6)]
+vars = colnames(df_Yield)[doubles][-(1:2)]
 names(vars) = vars
-df_calculated <- df_calculated %>% 
-  mutate_if(is.numeric, ~ replace_0(.))
-df_calculated %>% 
-  plot_it("Grain_crudeP_g")
 lapply(vars, function(x){
-  plot_it(df_calculated, x)
+  plot_it(df_Yield, x)
 })
+types = sapply(df_N_uptake, typeof)
+
+doubles = which(types == "double")
+vars = colnames(df_N_uptake)[doubles][-(1:2)]
+names(vars) = vars
+lapply(vars, function(x){
+  plot_it(frame = df_N_uptake, x)
+})
+
+
+
+
+df_Yield %>% 
+  plot_it("Grain_crudeP_g")
+
 ```
 ```{r big summary table, echo=FALSE}
 # df_calculated %>% 
 #   group_by(Index, Date, Trt_name) %>% 
 #   summarise_at(.vars = vars, list(mean = ~mean(.,na.rm = T), se = ~  sd(.)/sqrt(n()))) 
+
+# plotting test
+ggplot(data=sum_mean_GrainDryYield, aes(x=Date,y=mean, colour=Trt_name, shape=Site))+
+    geom_point()+
+    geom_line(alpha = 0.8)+ 
+    geom_errorbar(aes(ymin=mean-se,ymax=mean+se))+
+    facet_grid(Site ~ .) + 
+    theme_classic() +
+    theme(panel.border = element_rect(fill =NA),
+          text = element_text(family = "serif")) + 
+    ylab(expression("GrainDryYield"~g~DM/m^{2})) + 
+    scale_x_date(breaks = "2 weeks") +
+    scale_y_continuous(expand = c(0,0), limits = c(0, max(pretty(df_Yield[["GrainDryYield"]]))))
+  
 ```
 
