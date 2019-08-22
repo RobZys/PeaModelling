@@ -125,21 +125,49 @@ combined <- bind_rows(LN_renamed, HB_renamed)  %>%
 **"final_greenpoddw"**
 **"final_grainsprouteddw"**
 
+#####first time look at the sprouting issue in HB
+
+```{r some error in the excels }
+whole_plant %>% 
+  select(Date, Plot, Final_grainSproutedFW, Final_grainSproutedDW) %>% 
+  filter(!is.na(Final_grainSproutedDW) & Final_grainSproutedDW!=0) %>% 
+  mutate(boo = Final_grainSproutedDW > Final_grainSproutedFW) %>% 
+  filter(boo == 1) %>% 
+  view()
+```
+| ---Date--- |---event---| --- plot---| ---correction---|
+|	23/01/2019	|H6| 7| Use the mean dm percentage from others to correct this one.| 
+|	25/01/2019	|H7|5| corrected from raw data sheet|
+|	25/01/2019	|H7|13| corrected from raw data sheet|
+|	25/01/2019	|H7|21| corrected from raw data sheet|
+|	5/02/2019	  |H8|3| corrected from raw data sheet|
+
+
+**talked to Yong to ask for help. scan the raw data sheet for checking.**
+
 # plant organ to whole plant 
 
 ```{r necessary variables}
 whole_plant <- combined %>% 
   mutate_if(is.numeric, ~ replace_na(.,0)) %>%  # replace NAs by 0 for adding organs up
   mutate(# subsample fresh/dry weight 
-         SSFW = ifelse(SSFW == 0, Final_ResidueSubFW + Final_podFW + Final_grainFW, SSFW),
+         SSFW = ifelse(SSFW == 0, TFW, SSFW),
          Final_grainDW = (Final_100grainDW/100) * Final_GrainCount, # this is the problem that makes the graindw is greater than fw
-         SSDW = ifelse(SSDW == 0, (Final_ResidueSubDW + Final_podDW + Final_grainDW),SSDW),
+         # DW needs to be calculated for the final harvest in different sites because of the sprout
+         SSDW = ifelse(SSDW == 0  & Site == "LN", TFW * (Final_ResidueSubDW + Final_podDW + Final_grainDW)/(Final_ResidueSubFW + Final_podFW + Final_grainFW),SSDW),
+         SSDW = ifelse(SSDW == 0 & Site == "HB", 
+                         TFW * (Final_ResidueSubDW + Final_podDW + Final_grainDW + Final_grainSproutedDW)/ (Final_ResidueSubFW + Final_podFW + Final_grainFW + Final_grainSproutedFW), SSDW ), 
+         
     
          # partitioning, add final into account 
          partFW = greenleafFW + greenstemFW + deadFW + greenpodFW + greengrainFW + maturepodFW + maturegrainFW,
          partDW = greenleafDW + greenstemDW + deadDW + greenpodDW + greengrainDW + maturepodDW + maturegrainDW,
-         partFW = ifelse(partFW == 0, Final_ResidueSubFW + Final_podFW + Final_grainFW, partFW),
-         partDW = ifelse(partDW == 0, Final_ResidueSubDW + Final_podDW + Final_grainDW, partDW),
+         partFW = ifelse(partFW == 0, TFW, partFW),
+         # final_residueSub weight is only for checking purpose, back calculating the partDW for final harvest 
+         partDW = ifelse(partDW == 0 & Site == "LN", 
+                         TFW * (Final_ResidueSubDW + Final_podDW + Final_grainDW)/(Final_ResidueSubFW + Final_podFW + Final_grainFW), partDW),
+         partDW = ifelse(partDW == 0 & Site == "HB", 
+                         TFW * (Final_ResidueSubDW + Final_podDW + Final_grainDW + Final_grainSproutedDW)/ (Final_ResidueSubFW + Final_podFW + Final_grainFW + Final_grainSproutedFW), partDW ),
          
          # green area for light interception
          green_Area = Leaf_area + Stem_area + Pod_area,
@@ -149,9 +177,10 @@ whole_plant <- combined %>%
          grainDW = greengrainDW + maturegrainDW,
          grainFW = ifelse(grainFW == 0, Final_grainFW, grainFW),
          grainDW = ifelse(grainDW == 0, Final_grainDW, grainDW),
+         # There are sprouted grains in HB site 
          
          # back calculation the SSDW for Harvest 3 in HB
-         SSDW = ifelse(SSDW == 0, SSFW * (partDW/partFW), SSDW)
+         SSDW = ifelse(Event == "H3", SSFW * (partDW/partFW), SSDW)
 
   ) 
 
