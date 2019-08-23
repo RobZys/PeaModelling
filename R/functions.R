@@ -193,12 +193,13 @@ calculate_it <- function(df){
 #' @export
 #'
 #' @examples
-sum_it<- function(var1){
-  sum_mean<- df_calculated %>% 
-    group_by(Date,Trt_name, Index) %>% 
-    summarise_at(.vars = var1, list(~ mean(.), se= ~ sd(.)/sqrt(n())))
+sum_it<- function(df, var1){
+  sum_mean<- df %>% 
+    group_by(Site, Date, Trt_name) %>% 
+    summarise_at(.vars = var1, list(~ mean(., na.rm = TRUE), se= ~ sd(., na.rm = TRUE)/sqrt(n())))
   
   saveRDS(object = sum_mean, file = here::here("Data_intermediate", paste0("sum_mean_", var1, ".rds")), compress = FALSE)
+  sum_mean
 }
 
 #' plot_it
@@ -213,12 +214,13 @@ sum_it<- function(var1){
 plot_it<- function(frame=dataset_name,var1){
   
   
-  sum_mean <- sum_it(var1 = var1)
-  it_plot <- ggplot(data=sum_mean, aes(x=Date,y=mean, colour=Trt_name, shape=Index))+
+  sum_mean <- sum_it(df = frame,var1 = var1)
+ 
+  it_plot <- ggplot(data=sum_mean, aes(x=Date,y=mean, colour=Trt_name, shape=Site))+
     geom_point()+
     geom_line(alpha = 0.8)+ 
     geom_errorbar(aes(ymin=mean-se,ymax=mean+se))+
-    facet_grid(Index ~ .) + 
+    facet_grid(Site ~ .) + 
     theme_classic() +
     theme(panel.border = element_rect(fill =NA),
           text = element_text(family = "serif")) + 
