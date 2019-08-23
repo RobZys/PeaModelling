@@ -12,8 +12,8 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, fig.width = 8, fig.height = 6, warning = FALSE, message = FALSE)
 
-source("packages.R")
-source("functions.R")
+# source("packages.R")
+# source("functions.R")
 
 ```
 

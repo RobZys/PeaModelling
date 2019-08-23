@@ -8,23 +8,17 @@ output:
     toc: yes
     toc_depth: 4
     
-  html_document: default
+  html_document: 
+    code_folding: hide
+    toc: true
+    toc_depth: 3
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  cache = FALSE,
-  echo = FALSE,
-  message = FALSE,
-  warning = TRUE,
-  out.width = "100%",
-  autodep = TRUE,
-  strip.white = TRUE,
-  cache.comments = FALSE,
-  results = "hold")
-library(drake)
-library(tidyverse)
-source("functions.R")
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, fig.width = 8, fig.height = 6)
+# library(drake)
+# library(tidyverse)
+# source("functions.R")
 ```
 
 ## Read in the cleaned data
@@ -32,7 +26,7 @@ source("functions.R")
 browser variable names 
 
 ```{r load data from cache}
-loadd()
+df_biomass <- readd(df_biomass)
 ```
 
 
@@ -50,7 +44,6 @@ scatter_it <- function(df, x = "Date", y){
     scale_y_continuous(expand = c(0, 0), name = y)
 }
 scatter_it(df_biomass, x = "SSFW" ,y ="SSDW")
-scatter_it(df_biomass, y = "PP")
 scatter_it(df_biomass, x = "grainFW", y = "grainDW")
 
 bin_it <- function(df, y){
@@ -65,7 +58,6 @@ bin_it <- function(df, y){
     scale_x_date(date_breaks = "2 weeks")
 }
 
-bin_it(df_biomass, y = "SSFW")
 bin_it(df_biomass, y = "grainFW")
 bin_it(df_biomass, y = "green_Area")
 
@@ -80,14 +72,12 @@ histogram_it <- function(df = df_biomass, y){
 
 histogram_it(y = "SSFW")
 histogram_it(y = "TFW")
-histogram_it(y = "PP")
-histogram_it(y = "grainFW")
 histogram_it(y = "grainDW")
 ```
 
 _Note_:
 
-1. Grain weight agrees each other well.
+1. Grain weight agrees each other fine.
 2. Subsample fresh weight scatter in HB.
 3. Subsample dry weight has already show the trends for 3 sowing dates.
 4. Plant population varies. 
@@ -114,8 +104,23 @@ Next step:
 
 **Use the variable names have been defined in the grand excel**
 
+organ | category
+------|------
+leaf|green
+leaf|dead
+stem|green
+stem|dead
+pod|green
+pod|mature
+grain|green
+grain|mature
+final residue| special for final
+final pod|final all mature
+final grain| sprouted
+final grain|mature
 ```{r}
 gTokg <- 10
+gTot <- 100
 df_calculated <- df_biomass %>% 
     mutate_if(is.numeric, ~ replace_na(.,0)) %>% 
     mutate(Date = as.Date(Date),
@@ -137,7 +142,7 @@ df_calculated <- df_biomass %>%
            # ShellWt = perM * (greenpodDW + maturepodDW), # is this necessary
            
            ## GRAIN
-           GrainDryYield = perM * grainDW,  # total grain weight, green + mature
+           TotalGrainDryYield = perM * grainDW,  # total grain weight, green + mature
            GreengrainYield = perM * greengrainDW,
            MaturegrainYield = perM * maturegrainDW) %>% 
     mutate(LeafArea = perM * Leaf_area, #cm2
@@ -164,19 +169,140 @@ df_calculated <- df_biomass %>%
 
 ```
 
-### 2. summarise variables by using Rob's magic
-#### 2a. Loop over all variables
 
-```{r lappy it, fig.height=6, fig.width=8}
+#### 1a general pattern
 
+```{r overall looking}
+df_calculated %>% 
+  ggplot(aes(TotalDryYield, TotalGrainDryYield, col = N_timing, shape = Cultivar)) +
+  geom_point() +
+  facet_grid(  Sowing_Date ~ Site ) +
+  theme_classic() +
+  theme(panel.border = element_rect(fill =NA),
+          text = element_text(family = "serif"))
+df_calculated %>% 
+  ggplot(aes(N_Uptake_Whole_Plant, N_Uptake_Mat_Grain, col = N_timing, shape = Cultivar)) +
+  geom_point() +
+  facet_grid(  Sowing_Date ~ Site ) +
+  theme_classic() +
+  theme(panel.border = element_rect(fill =NA),
+          text = element_text(family = "serif"))
+
+
+```
+
+_Note_
+
+1. HB early sowing, there is a 0N plot has more than 2000 g DM/m2 (20t DM/ha?! and 10t grain dm/ha)
+2. N seems have no significant effects on grain or yield. ANOVA is required. 
+3. Cultivar B shows great grain N_uptake 
+4. Mature grain N uptake has only one plot?! -- Corrected by taking the final grain as maturegrain. 
+
+
+
+# Key _Notes_
+
+1. Key graphs:
+
+    a. TotalDryYield
+    b. TotalGrainDryYield
+    c. N_Uptake_Whole_Plant
+    d. N_Uptake_Mat_Grain
+    e. Grain_crudeP_g
+    f. Plant population
+    g. final N_Uptake_Residue
+    
+2. N_content* graphs general agrees with Rob's graphs
+    
+    a. N_content_Green_Leaf in HB has values till 2019-01-07 and lincoln has values till 2019-01-21
+   
+   
+3. Plant pop agrees with Rob's graph, but wondering the truth. target pop is $100/m^2$. 
+
+   **why the pop always larger than target? **
+
+    Any over counting? 
+    e.g Trt CE_E_0N CB_M_0N had plant pop spiked at the final harvest?!
+
+4. ** area index:
+
+    a. Pod GAI needs revise. 
+   
+5. To do:
+
+    a. calculate all grain N uptake (green + mature grain) over time. also recheck the calculation logic. 
+    b. Yield performance by trts.
+    c. Protein content by trts.
+    d. N_uptake performance by trts.
+    e. anova to exam cultivar and sowing date and N effects
+   
+    g. Prepare the data into the right format for APSIM
+    h. integrate the soil N data with N uptake
+    i. gs and sunscan data with GAI. 
+    f. integrate climate data to exam the GAI trends?!
+
+
+# Key graphs
+
+**Units conversion**
+
+All weight units are in g per $m^2$ to suit apsim input requirement
+
+To convert to t per ha, please use divide the y scale by 100. 
+
+e.g 1500 g DM per $m^2$ will be 15 t DM per ha.
+
+
+```{r key graphs}
 
 df_calculated <- df_calculated %>% 
   mutate_if(is.numeric, ~ replace_0(.)) # replace 0 by NAs for plotting
+
+
+
 df_Yield <- df_calculated %>% 
   select(Site, Date, Plot, Trt_name, Cultivar, Sowing_Date, ends_with("Yield"), Grain_crudeP_g)
 df_N_uptake <- df_calculated %>% 
   select(Site, Date, Plot, Trt_name, Cultivar, Sowing_Date, N_timing, starts_with("N_Uptake"))
+df_N_content <- df_calculated %>% 
+  select(Site, Date, Plot, Trt_name, Cultivar, Sowing_Date, N_timing, starts_with("N_Content"))
+df_AI <- df_calculated %>% 
+  select(Site, Date, Plot, Trt_name, Cultivar, Sowing_Date, N_timing, ends_with("AI"))
 
+
+
+df_Yield %>% 
+  plot_it("TotalDryYield") +
+  ylab(expression(paste("TotalDryYield", "g DM/m"^2)))
+df_Yield %>% 
+  plot_it("TotalGrainDryYield") +
+  ylab(expression(paste("TotalGrainDryYield", "g DM/m"^2)))
+df_N_uptake %>% 
+   plot_it("N_Uptake_Whole_Plant") +
+  ylab(expression(paste("N_Uptake_Whole_Plant", "g DM/m"^2)))
+df_N_uptake %>% 
+  plot_it("N_Uptake_Mat_Grain") +
+  ylab(expression(paste("N_Uptake_Mat_Grain", "g DM/m"^2)))
+
+df_N_uptake %>% 
+  plot_it("N_Uptake_Residue") +
+  ylab(expression(paste("N_Uptake_Residue", "g DM/m"^2)))
+df_Yield %>% 
+  plot_it("Grain_crudeP_g") +
+  ylab(expression(paste("Grain_crudeP", "g DM/m"^2)))
+
+df_calculated %>% 
+  plot_it("PP_m2") +
+  ylab(expression(paste("Plant Population", "m"^2)))
+  
+
+
+```
+
+### 2. summarise variables by using Rob's magic
+#### 2a. Loop over all variables
+
+```{r lappy it, fig.height=6, fig.width=8}
 
 
 types = sapply(df_Yield, typeof)
@@ -185,41 +311,114 @@ doubles = which(types == "double")
 vars = colnames(df_Yield)[doubles][-(1:2)]
 names(vars) = vars
 lapply(vars, function(x){
-  plot_it(df_Yield, x)
+  p <- plot_it(df_Yield, x)
+  p
+  # assign(paste0("p_", x), value = p, envir = .GlobalEnv)
 })
+
 types = sapply(df_N_uptake, typeof)
 
 doubles = which(types == "double")
 vars = colnames(df_N_uptake)[doubles][-(1:2)]
 names(vars) = vars
 lapply(vars, function(x){
-  plot_it(frame = df_N_uptake, x)
-})
+  p <- plot_it(frame = df_N_uptake, x)
+  p
+  # assign(paste0("p_", x), value = p, envir = .GlobalEnv)
+
+  })
+types = sapply(df_N_content, typeof)
+
+doubles = which(types == "double")
+vars = colnames(df_N_content)[doubles][-(1:2)]
+names(vars) = vars
+lapply(vars, function(x){
+  p <- plot_it(frame = df_N_content, x)
+  p
+  # assign(paste0("p_", x), value = p, envir = .GlobalEnv)
+  })
+
+types = sapply(df_AI, typeof)
+
+doubles = which(types == "double")
+vars = colnames(df_AI)[doubles][-(1:2)]
+names(vars) = vars
+lapply(vars, function(x){
+  p <- plot_it(frame = df_AI, x)
+  p
+  # assign(paste0("p_", x), value = p, envir = .GlobalEnv)
+  })
 
 
-
-
-df_Yield %>% 
-  plot_it("Grain_crudeP_g")
 
 ```
+
+
+
+## cross check with Mike's calculation
+
+```{r }
+LN_mike_yield <- readd(LN_mike_yield)
+LN_mike_yield %>% 
+  plot_it("TotalDryYield")
+
+plot(LN_mike_yield$TotalDryYield,
+     (df_Yield %>% filter(Site == "LN") %>% .$TotalDryYield) * 10,
+     main = "Total Dry Yield kg DM/ha",
+     xlab = "Mike's calculation",
+     ylab = "Frank's calculation")
+
+
+```
+
+_Note_
+1. some points does not agree
+2. final yield does not agree -- **why?**
+
+## plotly to investage
+
+```{r plotly}
+
+# p <- LN_mike_yield %>%
+#   ggplot(aes(x = TotalDryYield, y = (df_Yield %>% filter(Site == "LN") %>% .$TotalDryYield) * 10)) +
+#   geom_point() +
+#   geom_label(aes(label = Plot))+
+#   ylab("Frank's calculation")
+# 
+# ggplotly(p)
+
+```
+
+_Note_
+
+Plot 2 5 8 11 15 19 20 22 24
+seems not agree well. 
+
+```{r}
+df_biomass %>% 
+  filter(Plot %in% c(2, 5, 8, 11, 15, 19, 20, 22, 24),
+         Site =="LN") %>% 
+  select(Final_podFW, Final_grainFW)
+```
+
+
 ```{r big summary table, echo=FALSE}
 # df_calculated %>% 
 #   group_by(Index, Date, Trt_name) %>% 
 #   summarise_at(.vars = vars, list(mean = ~mean(.,na.rm = T), se = ~  sd(.)/sqrt(n()))) 
 
 # plotting test
-ggplot(data=sum_mean_GrainDryYield, aes(x=Date,y=mean, colour=Trt_name, shape=Site))+
-    geom_point()+
-    geom_line(alpha = 0.8)+ 
-    geom_errorbar(aes(ymin=mean-se,ymax=mean+se))+
-    facet_grid(Site ~ .) + 
-    theme_classic() +
-    theme(panel.border = element_rect(fill =NA),
-          text = element_text(family = "serif")) + 
-    ylab(expression("GrainDryYield"~g~DM/m^{2})) + 
-    scale_x_date(breaks = "2 weeks") +
-    scale_y_continuous(expand = c(0,0), limits = c(0, max(pretty(df_Yield[["GrainDryYield"]]))))
+# ggplot(data=sum_mean_GrainDryYield, aes(x=Date,y=mean, colour=Trt_name, shape=Site))+
+#     geom_point()+
+#     geom_line(alpha = 0.8)+ 
+#     geom_errorbar(aes(ymin=mean-se,ymax=mean+se))+
+#     facet_grid(Site ~ .) + 
+#     theme_classic() +
+#     theme(panel.border = element_rect(fill =NA),
+#           text = element_text(family = "serif")) + 
+#     ylab(expression("GrainDryYield"~g~DM/m^{2})) + 
+#     scale_x_date(breaks = "2 weeks") +
+#     scale_y_continuous(expand = c(0,0), limits = c(0, max(pretty(df_Yield[["GrainDryYield"]]))))
   
 ```
 
