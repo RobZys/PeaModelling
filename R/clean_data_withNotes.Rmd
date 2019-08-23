@@ -2,20 +2,21 @@
 title: '20190805'
 author: "Jian"
 date: "05/08/2019"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_depth: 3
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, fig.width = 8, fig.height = 6)
-```
+knitr::opts_chunk$set(echo = TRUE, fig.width = 8, fig.height = 6, warning = FALSE, message = FALSE)
 
-```{r pkgs}
 source("packages.R")
 source("functions.R")
 
-
-
 ```
+
 
 ```{r raw data}
 url <- "https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame.aspx?sourcedoc=/project/P442060-13/Research/18_19_SAE_pea_protein_managment.xlsx&action=default"
@@ -40,14 +41,14 @@ df_lincoln %>%
 LN <- df_lincoln %>% 
   as_tibble(.name_repair = "universal") %>% 
   mutate(Index = "LN") %>%
-  mutate_at(vars(starts_with("N_")), as.double)
+  mutate_at(vars(starts_with("N_Content")), as.double)
 
 HB <- df_HB %>% 
   as_tibble(.name_repair = "universal") %>% 
   mutate(Index = Source_HB,
          maturepodFW = as.numeric(maturepodFW),
          maturepodDW = as.numeric(maturepodDW)) %>% 
-  mutate_at(vars(starts_with("N_")), as.double)
+  mutate_at(vars(starts_with("N_Content")), as.double)
 
 
 
@@ -87,6 +88,8 @@ _Note_:
 1. LN has deadleaf and deadstem
 2. HB only has dead for deadleaf and deadstem 
 3. dead pod is called mature pod
+
+
 
 
 
@@ -134,19 +137,20 @@ combined <- bind_rows(LN_renamed, HB_renamed)  %>%
 #####first time look at the sprouting issue in HB
 
 ```{r some error in the excels }
-whole_plant %>% 
-  select(Date, Plot, Final_grainSproutedFW, Final_grainSproutedDW) %>% 
-  filter(!is.na(Final_grainSproutedDW) & Final_grainSproutedDW!=0) %>% 
-  mutate(boo = Final_grainSproutedDW > Final_grainSproutedFW) %>% 
-  filter(boo == 1) %>% 
-  view()
+# combined %>% 
+#   select(Date, Plot, Final_grainSproutedFW, Final_grainSproutedDW) %>% 
+#   filter(!is.na(Final_grainSproutedDW) & Final_grainSproutedDW!=0) %>% 
+#   mutate(boo = Final_grainSproutedDW > Final_grainSproutedFW) %>% 
+#   filter(boo == 1) %>% 
+#   view()
 ```
-| ---Date--- |---event---| --- plot---| ---correction---|
-|	23/01/2019	|H6| 7| Use the mean dm percentage from others to correct this one.| 
-|	25/01/2019	|H7|5| corrected from raw data sheet|
-|	25/01/2019	|H7|13| corrected from raw data sheet|
-|	25/01/2019	|H7|21| corrected from raw data sheet|
-|	5/02/2019	  |H8|3| corrected from raw data sheet|
+ ---Date--- |---event---| --- plot---| ---correction---
+ ------------| ------------|-------------|---------------
+	23/01/2019	|H6| 7| Use the mean dm percentage from others to correct this one.
+	25/01/2019	|H7|5| corrected from raw data sheet
+	25/01/2019	|H7|13| corrected from raw data sheet
+	25/01/2019	|H7|21| corrected from raw data sheet
+	5/02/2019	  |H8|3| corrected from raw data sheet
 
 
 **talked to Yong to ask for help. scan the raw data sheet for checking.**
@@ -157,7 +161,8 @@ _Note_:
 
 1. The final grain DW is calculated by the average 100 grain weight times grain count,
 2. is final grain count counts the sprouted ones? -- assume that it does --- need to confirm with Mike.
-
+    a. the final grain count does not have the sprouted ones. 
+    b. final grain fresh weight is separated for sprouted and normal grain based on the excel sheet - need to confirm with Nathan. 
 
 
 ```{r necessary variables}
@@ -182,6 +187,11 @@ whole_plant <- combined %>%
          partDW = ifelse(partDW == 0 & Site == "HB", 
                          TFW * (Final_ResidueSubDW + Final_podDW + Final_grainDW + Final_grainSproutedDW)/ (Final_ResidueSubFW + Final_podFW + Final_grainFW + Final_grainSproutedFW), partDW ),
          
+         #pod
+         greenpodFW = ifelse(greenpodFW ==0, Final_podFW, greenpodFW), 
+         greenpodDW = ifelse(greenpodDW ==0, Final_podDW, greenpodDW), 
+         maturepodFW = ifelse(maturepodFW == 0, Final_podFW, maturepodFW  ),
+         maturepodDW = ifelse(maturepodDW == 0, Final_podDW, maturepodDW  ),
          # green area for light interception
          green_Area = Leaf_area + Stem_area + Pod_area,
          
@@ -190,6 +200,8 @@ whole_plant <- combined %>%
          grainDW = greengrainDW + maturegrainDW,
          grainFW = ifelse(grainFW == 0, Final_grainFW, grainFW),
          grainDW = ifelse(grainDW == 0, Final_grainDW, grainDW),
+         maturegrainFW = ifelse(maturegrainFW == 0, Final_grainFW, maturegrainDW),
+         maturegrainDW = ifelse(maturegrainDW == 0, Final_grainDW, maturegrainDW),
          # There are sprouted grains in HB site 
          
          # back calculation the SSDW for Harvest 3 in HB
@@ -227,8 +239,10 @@ whole_plant %>%
 whole_plant %>% 
   mutate(partDM_PC = partDW/partFW,
          SSDM_PC = SSDW/ SSFW) %>% 
-  filter(Plot == 11) %>% 
-  select(SSDM_PC, partDM_PC, Plot, Site, Date, Event)
+  filter(Plot %in% c(1, 5,11),
+         Site == "HB") %>% 
+  select(Plot, Site, Date, Event, SSFW, SSDW, partFW, partDW, partDM_PC, SSDM_PC) %>% 
+  filter(partDM_PC > 0.7)
 ```
 
 **the overall whole plant dry matter percentage in partitioning sample generally agrees with the subsample dry mater percentage. But plot 17 in Lincoln may need to pay attention**
@@ -487,6 +501,16 @@ soil_minN <- bind_rows(LN_120918, LN_280119, LN_040219, LN_190219, HB_000219) %>
 colnames(soil_minN)
 ```
 
+
+```{r}
+LN_mike <- scrape_xl(url = url, sheet = "CalculatedDataLincoln", skip = 2)
+LN_mike_yield <- LN_mike %>% 
+  select(Site = Index, Date, Plot, Trt_num, Trt_name, Cultivar, Sowing_Date, N_timing, ends_with("Yield"), starts_with("Fi_")) %>% 
+  mutate(Site = "LN",
+         Date = as.Date(Date),
+         TotalDryYield = ifelse(is.na(TotalDryYield), Fi_TotalYield, TotalDryYield))
+```
+
 # lock everything into sqlite3
 
 ```{r}
@@ -496,133 +520,133 @@ dbListTables(con)
 
 # creat table to correct the type of variable -----------------------------
 
-colnames(metadata)
-dbExecute(con," CREATE TABLE `metadata` (
-  `Site` TEXT NOT NULL,
-  `Date` int NOT NULL,
-  `Plot` int NOT NULL,
-  `Block` int NOT NULL,
-  `Trt_num` int NOT NULL,
-  `Trt_name` TEXT NOT NULL,
-  `Cultivar` TEXT NOT NULL,
-  `Sowing_Date` TEXT NOT NULL,
-  `N_timing` DOUBLE,
-  PRIMARY KEY (Site, Date, Plot)
-);
-")
 
-dbExecute(con,"CREATE TABLE `biomass` (
-  `Site` TEXT,
-  `Date` REAL,
-  `Event` int NOT NULL,
-  `Plot` int NOT NULL ,
-  `Block` int NOT NULL,
-  `Trt_num` int NOT NULL,
-  `Trt_name` TEXT,
-  `Cultivar` TEXT,
-  `Sowing_Date` TEXT,
-  `N_timing` DOUBLE,
-  `HA` REAL,
-  `PP` REAL,
-  `TFW` REAL,
-  `SSFW` REAL,
-  `SSDW` REAL,
-  `partFW` REAL,
-  `greenleafFW` REAL,
-  `greenstemFW` REAL,
-  `greenpodFW` REAL,
-  `maturepodFW` REAL,
-  `greengrainFW` REAL,
-  `maturegrainFW` REAL,
-  `Leaf_area` REAL,
-  `Stem_area` REAL,
-  `Pod_area` REAL,
-  `greenleafDW` REAL,
-  `greenstemDW` REAL,
-  `greenpodDW` REAL,
-  `maturepodDW` REAL,
-  `greengrainDW` REAL,
-  `maturegrainDW` REAL,
-  `Final_ResidueSubFW` REAL,
-  `Final_podFW` REAL,
-  `Final_grainFW` REAL,
-  `Final_100grainFW` REAL,
-  `Final_ResidueSubDW` REAL,
-  `Final_podDW` REAL,
-  `Final_100grainDW` REAL,
-  `Final_GrainMoisture` REAL,
-  `Final_GrainCount` REAL,
-  `N_Content_Green_Leaf` REAL,
-  `N_Content_Green_Stem` REAL,
-  `N_Content_Green_Pod` REAL,
-  `N_Content_Mat_Pod` REAL,
-  `N_Content_Green_Grain` REAL,
-  `N_Content_Mat_Grain` REAL,
-  `N_Content_Residue` REAL,
-  `deadFW` REAL,
-  `deadDW` REAL,
-  `N_Content_Dead` REAL,
-  `Pea_num` REAL,
-  `Pod_num` REAL,
-  `Final_grainSprouted` REAL,
-  `Final_grainSproutedFW` REAL,
-  `Final_GreenPodNumber` REAL,
-  `Final_GreenPodFW` REAL,
-  `Final_greenPodDW` REAL,
-  `Final_grainSproutedDW` REAL,
-  `Final_grainDW` REAL,
-  `partDW` REAL,
-  `green_Area` REAL,
-  `grainFW` REAL,
-  `grainDW` REAL,
-  `Id` int NOT NULL,
-  PRIMARY KEY (Id)
-);")
-
-dbExecute(con," CREATE TABLE `soilMinN` (
-  `Site` TEXT NOT NULL,
-  `Date` int NOT NULL,
-  `Plot` int ,
-  `Depth` TEXT NOT NULL,
-  `Core_length` int NOT NULL,
-  
-  `min_N_kgN_ha` DOUBLE,
-  `Id` int NOT NULL,
-  PRIMARY KEY (Id)
-);
-")
-colnames(gs)
-dbExecute(con," CREATE TABLE `greenseeker` (
-  `Site` TEXT,
-  `Date` int NOT NULL,
-  `Plot` int NOT NULL,
-  `NDVISC` DOUBLE,
-  `Id` int NOT NULL,
-  PRIMARY KEY (Id)
- 
-);
-")
-colnames(sunscan)
-dbExecute(con," CREATE TABLE `sunscan` (
-  `Site` TEXT,
-  `Date` int NOT NULL,
-  `Plot` int NOT NULL,
-  `Light_Int_Corr` DOUBLE,
-  `Id` int NOT NULL,
-  PRIMARY KEY (Id)
-  
-);
-")
-# dbWriteTable(con, name = "metadata", value = metadata, append=TRUE)
-
-dbWriteTable(con, name = "biomass", value = whole_plant, overwrite=TRUE)
-dbWriteTable(con, name = "soilMinN", value = soil_minN, append = TRUE)
-
-dbWriteTable(con, name = "greenseeker", value = gs,append=TRUE)
-dbWriteTable(con, name = "sunscan", value = sunscan,append=TRUE)
-
-
-DBI::dbDisconnect(con)
+# dbExecute(con," CREATE TABLE `metadata` (
+#   `Site` TEXT NOT NULL,
+#   `Date` int NOT NULL,
+#   `Plot` int NOT NULL,
+#   `Block` int NOT NULL,
+#   `Trt_num` int NOT NULL,
+#   `Trt_name` TEXT NOT NULL,
+#   `Cultivar` TEXT NOT NULL,
+#   `Sowing_Date` TEXT NOT NULL,
+#   `N_timing` DOUBLE,
+#   PRIMARY KEY (Site, Date, Plot)
+# );
+# ")
+# 
+# dbExecute(con,"CREATE TABLE `biomass` (
+#   `Site` TEXT,
+#   `Date` REAL,
+#   `Event` int NOT NULL,
+#   `Plot` int NOT NULL ,
+#   `Block` int NOT NULL,
+#   `Trt_num` int NOT NULL,
+#   `Trt_name` TEXT,
+#   `Cultivar` TEXT,
+#   `Sowing_Date` TEXT,
+#   `N_timing` DOUBLE,
+#   `HA` REAL,
+#   `PP` REAL,
+#   `TFW` REAL,
+#   `SSFW` REAL,
+#   `SSDW` REAL,
+#   `partFW` REAL,
+#   `greenleafFW` REAL,
+#   `greenstemFW` REAL,
+#   `greenpodFW` REAL,
+#   `maturepodFW` REAL,
+#   `greengrainFW` REAL,
+#   `maturegrainFW` REAL,
+#   `Leaf_area` REAL,
+#   `Stem_area` REAL,
+#   `Pod_area` REAL,
+#   `greenleafDW` REAL,
+#   `greenstemDW` REAL,
+#   `greenpodDW` REAL,
+#   `maturepodDW` REAL,
+#   `greengrainDW` REAL,
+#   `maturegrainDW` REAL,
+#   `Final_ResidueSubFW` REAL,
+#   `Final_podFW` REAL,
+#   `Final_grainFW` REAL,
+#   `Final_100grainFW` REAL,
+#   `Final_ResidueSubDW` REAL,
+#   `Final_podDW` REAL,
+#   `Final_100grainDW` REAL,
+#   `Final_GrainMoisture` REAL,
+#   `Final_GrainCount` REAL,
+#   `N_Content_Green_Leaf` REAL,
+#   `N_Content_Green_Stem` REAL,
+#   `N_Content_Green_Pod` REAL,
+#   `N_Content_Mat_Pod` REAL,
+#   `N_Content_Green_Grain` REAL,
+#   `N_Content_Mat_Grain` REAL,
+#   `N_Content_Residue` REAL,
+#   `deadFW` REAL,
+#   `deadDW` REAL,
+#   `N_Content_Dead` REAL,
+#   `Pea_num` REAL,
+#   `Pod_num` REAL,
+#   `Final_grainSprouted` REAL,
+#   `Final_grainSproutedFW` REAL,
+#   `Final_GreenPodNumber` REAL,
+#   `Final_GreenPodFW` REAL,
+#   `Final_greenPodDW` REAL,
+#   `Final_grainSproutedDW` REAL,
+#   `Final_grainDW` REAL,
+#   `partDW` REAL,
+#   `green_Area` REAL,
+#   `grainFW` REAL,
+#   `grainDW` REAL,
+#   `Id` int NOT NULL,
+#   PRIMARY KEY (Id)
+# );")
+# 
+# dbExecute(con," CREATE TABLE `soilMinN` (
+#   `Site` TEXT NOT NULL,
+#   `Date` int NOT NULL,
+#   `Plot` int ,
+#   `Depth` TEXT NOT NULL,
+#   `Core_length` int NOT NULL,
+#   
+#   `min_N_kgN_ha` DOUBLE,
+#   `Id` int NOT NULL,
+#   PRIMARY KEY (Id)
+# );
+# ")
+# colnames(gs)
+# dbExecute(con," CREATE TABLE `greenseeker` (
+#   `Site` TEXT,
+#   `Date` int NOT NULL,
+#   `Plot` int NOT NULL,
+#   `NDVISC` DOUBLE,
+#   `Id` int NOT NULL,
+#   PRIMARY KEY (Id)
+#  
+# );
+# ")
+# colnames(sunscan)
+# dbExecute(con," CREATE TABLE `sunscan` (
+#   `Site` TEXT,
+#   `Date` int NOT NULL,
+#   `Plot` int NOT NULL,
+#   `Light_Int_Corr` DOUBLE,
+#   `Id` int NOT NULL,
+#   PRIMARY KEY (Id)
+#   
+# );
+# ")
+# # dbWriteTable(con, name = "metadata", value = metadata, append=TRUE)
+# 
+# dbWriteTable(con, name = "biomass", value = whole_plant, overwrite=TRUE)
+# dbWriteTable(con, name = "soilMinN", value = soil_minN, append = TRUE)
+# 
+# dbWriteTable(con, name = "greenseeker", value = gs,append=TRUE)
+# dbWriteTable(con, name = "sunscan", value = sunscan,append=TRUE)
+# dbWriteTable(con, name = "LN_mike_yield", value = LN_mike_yield, overwrite=TRUE)
+# 
+# DBI::dbDisconnect(con)
 ```
 
 ```{r remove tables from sqlite}
@@ -633,12 +657,14 @@ DBI::dbDisconnect(con)
 # dbRemoveTable(con, "soilMinN")
 ```
 
-```{r}
+```{r example of converting the date}
 con <- dbConnect(RSQLite::SQLite(),'../Data/Pea_data.sqlite3')
 dbListTables(con)
 
 gs_sql <- dbReadTable(con, "greenseeker")
 gs_sql %>% 
-  mutate(date = as.Date(c(17835), origin = "1970-01-01"))
+  mutate(date = as.Date(c(17835), origin = "1970-01-01")) %>% 
+  head()
+DBI::dbDisconnect(con)
 ```
 
