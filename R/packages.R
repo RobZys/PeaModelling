@@ -2,5 +2,11 @@
 # This example requires packages forcats, readxl, and rmarkdown,
 # but you do not need to load them here.
 library(drake)
-require(dplyr)
-require(ggplot2)
+library(readxl)
+library(tidyverse)
+library(lubridate)
+library(data.table)
+library(DBI)
+library(RSQLite)
+library(RCurl)
+library(plotly)

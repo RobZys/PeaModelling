@@ -2,22 +2,21 @@
 title: '20190805'
 author: "Jian"
 date: "05/08/2019"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_depth: 3
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+knitr::opts_chunk$set(echo = TRUE, fig.width = 8, fig.height = 6, warning = FALSE, message = FALSE)
 
-```{r pkgs}
-library(readxl)
-library(tidyverse)
-library(lubridate)
-source("R/IplantScrape.r")
-
-replace_0 <- function(x) {x = ifelse(x == 0, NA, x);x} # 0s present in Lincoln data, convert to NAs
+# source("packages.R")
+# source("functions.R")
 
 ```
+
 
 ```{r raw data}
 url <- "https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame.aspx?sourcedoc=/project/P442060-13/Research/18_19_SAE_pea_protein_managment.xlsx&action=default"
@@ -33,7 +32,7 @@ df_HB <- scrape_xl(url = url, sheet = Source_HB, skip = 2)
 
 # repair the name and glimpse the structure of the data
 df_lincoln %>% 
-  mutate(Index = Source_Linc) %>%
+  mutate(Site = Source_Linc) %>%
   as_tibble(.name_repair = "universal") %>% 
   glimpse()
 
@@ -41,20 +40,20 @@ df_lincoln %>%
 # need to replace the `-` by NA and change type
 LN <- df_lincoln %>% 
   as_tibble(.name_repair = "universal") %>% 
-  mutate(Index = Source_Linc) %>%
-  mutate_at(vars(starts_with("N_")), as.double)
+  mutate(Index = "LN") %>%
+  mutate_at(vars(starts_with("N_Content")), as.double)
 
 HB <- df_HB %>% 
   as_tibble(.name_repair = "universal") %>% 
   mutate(Index = Source_HB,
          maturepodFW = as.numeric(maturepodFW),
          maturepodDW = as.numeric(maturepodDW)) %>% 
-  mutate_at(vars(starts_with("N_")), as.double)
+  mutate_at(vars(starts_with("N_Content")), as.double)
 
 
 
 # combined_raw <- bind_rows(LN, HB) %>% 
-  # mutate(Index = gsub("RAW\\_","", Index))
+  # mutate(Site = gsub("RAW\\_","", Site))
 
 ```
 
@@ -84,6 +83,14 @@ setdiff(colnames(HB), colnames(LN))
 
 ```
 
+_Note_:
+
+1. LN has deadleaf and deadstem
+2. HB only has dead for deadleaf and deadstem 
+3. dead pod is called mature pod
+
+
+
 
 
 ```{r}
@@ -111,7 +118,10 @@ setdiff(colnames(LN_renamed), colnames(HB_renamed))
 setdiff(colnames(HB_renamed), colnames(LN_renamed))
 
 combined <- bind_rows(LN_renamed, HB_renamed)  %>% 
-  mutate(Index = gsub("RAW_","", Index))
+  rename(Site = Index) %>% 
+  mutate(Site = gsub("RAW_","", Site),
+         Date = ymd(Date))# date should be in NZ format
+ 
 
 ```
 
@@ -124,21 +134,64 @@ combined <- bind_rows(LN_renamed, HB_renamed)  %>%
 **"final_greenpoddw"**
 **"final_grainsprouteddw"**
 
+#####first time look at the sprouting issue in HB
+
+```{r some error in the excels }
+# combined %>% 
+#   select(Date, Plot, Final_grainSproutedFW, Final_grainSproutedDW) %>% 
+#   filter(!is.na(Final_grainSproutedDW) & Final_grainSproutedDW!=0) %>% 
+#   mutate(boo = Final_grainSproutedDW > Final_grainSproutedFW) %>% 
+#   filter(boo == 1) %>% 
+#   view()
+```
+ ---Date--- |---event---| --- plot---| ---correction---
+ ------------| ------------|-------------|---------------
+	23/01/2019	|H6| 7| Use the mean dm percentage from others to correct this one.
+	25/01/2019	|H7|5| corrected from raw data sheet
+	25/01/2019	|H7|13| corrected from raw data sheet
+	25/01/2019	|H7|21| corrected from raw data sheet
+	5/02/2019	  |H8|3| corrected from raw data sheet
+
+
+**talked to Yong to ask for help. scan the raw data sheet for checking.**
 
 # plant organ to whole plant 
+
+_Note_:
+
+1. The final grain DW is calculated by the average 100 grain weight times grain count,
+2. is final grain count counts the sprouted ones? -- assume that it does --- need to confirm with Mike.
+    a. the final grain count does not have the sprouted ones. 
+    b. final grain fresh weight is separated for sprouted and normal grain based on the excel sheet - need to confirm with Nathan. 
+
 
 ```{r necessary variables}
 whole_plant <- combined %>% 
   mutate_if(is.numeric, ~ replace_na(.,0)) %>%  # replace NAs by 0 for adding organs up
   mutate(# subsample fresh/dry weight 
-         SSFW = ifelse(SSFW == 0, Final_ResidueSubFW + Final_podFW + Final_grainFW, SSFW),
+         SSFW = ifelse(SSFW == 0, TFW, SSFW),
          Final_grainDW = (Final_100grainDW/100) * Final_GrainCount, # this is the problem that makes the graindw is greater than fw
-         SSDW = ifelse(SSDW == 0, (Final_ResidueSubDW + Final_podDW + Final_grainDW),SSDW),
+         # DW needs to be calculated for the final harvest in different sites because of the sprout
+         SSDW = ifelse(SSDW == 0  & Site == "LN", TFW * (Final_ResidueSubDW + Final_podDW + Final_grainDW)/(Final_ResidueSubFW + Final_podFW + Final_grainFW),SSDW),
+         SSDW = ifelse(SSDW == 0 & Site == "HB", 
+                         TFW * (Final_ResidueSubDW + Final_podDW + Final_grainDW + Final_grainSproutedDW)/ (Final_ResidueSubFW + Final_podFW + Final_grainFW + Final_grainSproutedFW), SSDW ), 
+         
     
-         # partitioning
+         # partitioning, add final into account 
          partFW = greenleafFW + greenstemFW + deadFW + greenpodFW + greengrainFW + maturepodFW + maturegrainFW,
          partDW = greenleafDW + greenstemDW + deadDW + greenpodDW + greengrainDW + maturepodDW + maturegrainDW,
+         partFW = ifelse(partFW == 0, TFW, partFW),
+         # final_residueSub weight is only for checking purpose, back calculating the partDW for final harvest 
+         partDW = ifelse(partDW == 0 & Site == "LN", 
+                         TFW * (Final_ResidueSubDW + Final_podDW + Final_grainDW)/(Final_ResidueSubFW + Final_podFW + Final_grainFW), partDW),
+         partDW = ifelse(partDW == 0 & Site == "HB", 
+                         TFW * (Final_ResidueSubDW + Final_podDW + Final_grainDW + Final_grainSproutedDW)/ (Final_ResidueSubFW + Final_podFW + Final_grainFW + Final_grainSproutedFW), partDW ),
          
+         #pod
+         greenpodFW = ifelse(greenpodFW ==0, Final_podFW, greenpodFW), 
+         greenpodDW = ifelse(greenpodDW ==0, Final_podDW, greenpodDW), 
+         maturepodFW = ifelse(maturepodFW == 0, Final_podFW, maturepodFW  ),
+         maturepodDW = ifelse(maturepodDW == 0, Final_podDW, maturepodDW  ),
          # green area for light interception
          green_Area = Leaf_area + Stem_area + Pod_area,
          
@@ -146,23 +199,31 @@ whole_plant <- combined %>%
          grainFW = greengrainFW + maturegrainFW,
          grainDW = greengrainDW + maturegrainDW,
          grainFW = ifelse(grainFW == 0, Final_grainFW, grainFW),
-         grainDW = ifelse(grainDW == 0, Final_grainDW, grainDW)
+         grainDW = ifelse(grainDW == 0, Final_grainDW, grainDW),
+         maturegrainFW = ifelse(maturegrainFW == 0, Final_grainFW, maturegrainDW),
+         maturegrainDW = ifelse(maturegrainDW == 0, Final_grainDW, maturegrainDW),
+         # There are sprouted grains in HB site 
+         
+         # back calculation the SSDW for Harvest 3 in HB
+         SSDW = ifelse(Event == "H3", SSFW * (partDW/partFW), SSDW)
 
   ) 
 
 whole_plant %>% 
-  select(Index, Date, Event, Block, Plot, Trt_name, HA, PP, TFW, SSFW, SSDW, partFW, partDW, green_Area) %>% 
+  select(Site, Date, Event, Block, Plot, Trt_name, HA, PP, TFW, SSFW, SSDW, partFW, partDW, green_Area) %>% 
   ggplot(aes(SSFW, SSDW, color = Event))+
   geom_point()+
-  facet_grid(~ Index) 
+  facet_grid(~ Site) 
 whole_plant %>% 
   ggplot(aes(partFW, partDW, color = Event))+
   geom_point()+
-  facet_grid(~ Index) 
+  facet_grid(~ Site) 
 ```
 
 **Harvest 3 in HB has no SSDW**
 Need to calculate from the Part dm percentage
+
+
 
 
 ```{r overall dm percentage}
@@ -173,31 +234,41 @@ whole_plant %>%
   ggplot(aes(partDM_PC, SSDM_PC))+
   geom_point()+
   geom_smooth( method = "lm", se = F) + 
-  facet_grid(~ Index) +
+  facet_grid(~ Site) +
   geom_text(aes(label = Plot), nudge_y = 0.05, check_overlap = T)
 whole_plant %>% 
   mutate(partDM_PC = partDW/partFW,
          SSDM_PC = SSDW/ SSFW) %>% 
-  filter(Plot == 17) %>% 
-  select(SSDM_PC, partDM_PC, Plot, Index, Date, Event)
+  filter(Plot %in% c(1, 5,11),
+         Site == "HB") %>% 
+  select(Plot, Site, Date, Event, SSFW, SSDW, partFW, partDW, partDM_PC, SSDM_PC) %>% 
+  filter(partDM_PC > 0.7)
 ```
 
 **the overall whole plant dry matter percentage in partitioning sample generally agrees with the subsample dry mater percentage. But plot 17 in Lincoln may need to pay attention**
 
+_note_:
+1. Mike double checked plot 17, the data looks good now. 
+2. Issy also updated some values, which reduce the variability of the data. 
+
 **plot 17 seems to have trouble to procude any green leaf and stem when harvested at 2019-01-21**
+
+**plot 1, 5 and 11 in HB have higher partDM percentage** 
+11 and 5 are the same trt and cultivar but 1 is another cultivar. 
+accept the variablity and proceed with cautions!!!
 
 ```{r checking errors}
 whole_plant %>% 
   mutate(DM_pc = SSDW/SSFW * 100,
          DM_pc = ifelse(DM_pc == 0, partDW/partFW*100, DM_pc)) %>% 
   filter(DM_pc > 100) %>% 
-  select(Index,Plot, Date, Event, starts_with("Final"), DM_pc) 
+  select(Site,Plot, Date, Event, starts_with("Final"), DM_pc) 
   
 ```
 
 _note_
 
-1. H7 plot21 final residuedw is greater(`277.1`) than fw(`235.5`) - need to double check 
+1. H7 plot21 final residuedw is greater(`277.1`) than fw(`235.5`) - need to double check - Issy checked and updated
 2. SD1_final plot24 graindw is greater than grainfw due to the calculation method? average grain weight * graincount. 
 
 
@@ -210,7 +281,7 @@ colnames(whole_plant) %>%
 whole_plant %>% 
   mutate(grain_pc = grainDW/grainFW *100) %>% 
   filter(grain_pc > 100) %>% 
-  select(Index, Date, Event, Plot, grainDW, grainFW, grain_pc)
+  select(Site, Date, Event, Plot, grainDW, grainFW, grain_pc)
 ```
 
 ```{r checking the parts}
@@ -226,16 +297,16 @@ dead_part = colnames(whole_plant) %>%
 whole_plant %>% 
   mutate(dead_pc = deadDW/deadFW *100) %>% 
   filter(dead_pc > 100) %>% 
-  select(Index, Date, Event, Plot, deadDW, deadFW, dead_pc)
+  select(Site, Date, Event, Plot, deadDW, deadFW, dead_pc)
 
 whole_plant %>% 
   mutate(stem_pc = greenstemDW/greenstemFW *100) %>% 
   filter(stem_pc > 100) %>% 
-  select(Index, Date, Event, Plot, greenstemDW, greenstemFW, stem_pc)
+  select(Site, Date, Event, Plot, greenstemDW, greenstemFW, stem_pc)
 whole_plant %>% 
   mutate(leaf_pc = greenleafDW/greenleafFW *100) %>% 
   filter(leaf_pc > 100) %>% 
-  select(Index, Date, Event, Plot, greenleafDW, greenleafFW, leaf_pc)
+  select(Site, Date, Event, Plot, greenleafDW, greenleafFW, leaf_pc)
 
 ```
 
@@ -245,12 +316,355 @@ whole_plant %>%
 **should I use partitioning sample weight to calculate the proportion of subsample in total sample or the subsample weight or both**
 
 
-```{r}
+```{r overall treand checking}
 whole_plant %>% 
-  mutate(SSDW_pc = SSDW/SSFW ) %>% 
-  ggplot(aes(Date, SSDW_pc, color = Cultivar))+
+
+  mutate(DM_pc = SSDW/SSFW ,
+         DM_pc = ifelse(DM_pc == 0, partDW/partFW, DM_pc))%>% 
+  ggplot(aes(as.Date(Date), DM_pc, color = Cultivar))+
+  geom_jitter() +
+  facet_grid(~ Site) +
+  geom_text(aes(label = Plot), check_overlap = T, nudge_x = 0.5, nudge_y = -0.05)+
+  scale_y_continuous(breaks = seq(0, 1, by = 0.2),
+                     labels = scales::percent,
+                     limits = c(0, 1.01),
+                     expand = c(0,0)) +
+  scale_x_date(date_labels = "%b %d")
+
+
+```
+
+
+**no values below 0 or above 100%**
+```{r}
+whole_plant <- whole_plant %>% 
+  mutate_if(is.numeric, ~ replace_0(.)) %>% 
+  mutate(Id = 1:n())
+
+
+```
+
+
+
+# greenseeker and sunscan
+
+```{r gs LN, message=FALSE, warning=FALSE}
+url_gs_LN <- "https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame.aspx?sourcedoc=/project/P442060-13/Research/Pea_Protein_GS_2018-19_Lincoln.xlsx&action=default"
+url_gs_HB <- "https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame.aspx?sourcedoc=/project/P442060-13/Research/Pea_Protein_GS_2018-19_HBay.xlsx&action=default"
+Source_HB = "RAW_HB"
+Source_Linc = "RAW_Lincoln"
+# greenseeker and sunscan -------------------------------------------------
+
+gs_sheet = "NDVI raw data"
+
+gs_lincoln <- scrape_xl(url_gs_LN, sheet = gs_sheet, skip = 5)
+gs_HB <- scrape_xl(url_gs_HB, sheet = gs_sheet, skip = 5)
+gs_LN <- gs_lincoln %>% 
+  select(Date, Plot, NDVISC) %>% 
+  mutate(Date = as.Date(Date),
+         Plot = as.character(Plot)) %>% 
+  filter(!is.na(Plot))
+
+gs_LN %>% 
+  group_by(Date, Plot) %>% 
+  dplyr::summarise(NDVI_mean = mean(NDVISC, na.rm = TRUE),
+            NDVI_se = sd(NDVISC, na.rm = TRUE)/sqrt(n())) %>% 
+  filter(!is.na(Plot)) %>% 
+  ggplot(aes(Date, NDVI_mean, group = Plot)) +
   geom_point() +
-  facet_grid(~ Index) +
-  geom_text(aes(label = Plot), check_overlap = T, nudge_y = 0.05)
+  geom_line()
+
+```
+
+
+# plot 10 in 20181203 has a negative scaled NDVI value, possible to be early stage of the crop
+# correct to 0
+# plot NA is bare soil, safe to ignore
+# 2nd one always lower than the 1st measurement in sowing date one. WHY???
+# a bump over 1, not good. how to explain 
+
+```{r hb gs}
+gs_HB <-  gs_HB %>% 
+  select(Date, Plot, NDVISC) %>% 
+  mutate(Date = as.Date(Date),
+         Plot = as.character(Plot)) %>% 
+  filter(Plot != "bare_soil")
+gs_HB %>% 
+  group_by(Date, Plot) %>% 
+  dplyr::summarise(NDVI_mean = mean(NDVISC, na.rm = TRUE),
+                   NDVI_se = sd(NDVISC, na.rm = TRUE)/sqrt(n())) %>% 
+  filter(!is.na(Plot)) %>% 
+  ggplot(aes(Date, NDVI_mean, group = Plot)) +
+  geom_point() +
+  geom_line()
+
+```
+# no data avaiable for HB greenseeker or it is somewhere else? 
+
+
+
+```{r sunscan}
+sunscan = "Sunscan"
+sunscan_LN <- scrape_xl(url_gs_LN, sheet = sunscan, skip = 3)
+sunscan_LN <- sunscan_LN %>% 
+  select(Date, Plot = Plot...12,Light_Int_Corr)   %>% 
+  filter(Plot != "above") %>%  # Light int is calculated values
+  mutate(Date = as.Date(Date))
+
+sunscan_LN %>% 
+  group_by(Date, Plot) %>% 
+  dplyr::summarise(light_mean = mean(Light_Int_Corr, na.rm = TRUE),
+                   light_se = sd(Light_Int_Corr, na.rm = TRUE)/sqrt(n())) %>% 
+  ggplot(aes(Date, light_mean, group = Plot,color = Plot)) +
+  geom_point() +
+  geom_line()
+
+# sunscan is sampled in selected plots
+sunscan = "Ceptometer"
+sunscan_HB <- scrape_xl(url_gs_HB, sheet = sunscan, skip = 0)
+sunscan_HB <- sunscan_HB %>% 
+  select(Date, Plot = `Plot no`,Light_Int_Corr = LI) %>% 
+  filter(Plot != "above") %>% 
+  mutate(Date = as.Date(Date),
+         Plot = as.character(Plot))
+
+sunscan_HB %>%  # Light int is calculated values
+  group_by(Date, Plot) %>% 
+  dplyr::summarise(light_mean = mean(Light_Int_Corr, na.rm = TRUE),
+                   light_se = sd(Light_Int_Corr, na.rm = TRUE)/sqrt(n())) %>% 
+ 
+  ggplot(aes(Date, light_mean, group = Plot, color = as.character(Plot))) +
+  geom_point() +
+  geom_line()
+```
+
+##### plot 1 and 3 have quite a bit variation 
+
+```{r combine two}
+
+sunscan <- sunscan_LN %>%
+  mutate(Site = "LN") %>% 
+  bind_rows(sunscan_HB %>% 
+              mutate(Site = "HB")) %>% 
+  select(Site, everything()) %>% 
+  mutate(Id = 1:n()) # add unique identifier for the table 
+
+gs <- gs_LN %>% 
+  mutate(Site = "LN") %>% # add unique identifier for each site 
+  bind_rows(gs_HB %>% 
+              mutate(Site = "HB")) %>% 
+  select(Site, everything())%>% 
+    mutate(Id = 1:n()) # add unique identifier for the table 
+
+
+```
+
+# Soil 
+
+```{r soil raw}
+url_soil <- "https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame.aspx?sourcedoc=/project/P442060-13/Research/PeaProtein_Soil_Test_Results_2018-19.xlsx&action=default"
+
+sheet_no <- as.integer(2:6)
+# 
+l <- lapply(sheet_no, function(x){
+  df <- scrape_xl(url_soil, sheet = x, skip = 8)
+})
+# lappy probably not going to work since the inconsistancy of the excel sheets
+
+# [1] "Basic Test & BD"         "MinN_Lincoln_12-09-18"  
+# [3] "MinN_Lincoln_28-01-19"   "MinN_Lincoln_04-02-2019"
+# [5] "MinN_Lincoln_19-02-2019" "MinN_HBay_Feb2019"      
+# [7] "Pivots"                  "TrialPlan_Lincoln"      
+# [9] "TrialPlan_HB"  
+LN_120918 <- l[[1]]
+LN_280119 <- l[[2]]
+LN_040219 <- l[[3]]
+LN_190219 <- l[[4]]
+HB_000219 <- l[[5]]
+LN_120918 <- LN_120918 %>% 
+  select(Site, Date, Depth, Core_length, min_N_kgN_ha = `kgN/ha`) %>% 
+  filter(!is.na(min_N_kgN_ha)) %>% 
+  mutate(Site = "LN",
+         Date = as.Date(Date))
+soil_dates <- as.Date(c("2019-01-28", "2019-02-04", "2019-02-19","2019-02-05"))
+
+LN_280119 <- select_cols_soils(LN_280119, Site = "LN",Date = soil_dates[1])
+LN_040219 <- select_cols_soils(LN_040219, Site = "LN",Date = soil_dates[2])
+LN_190219 <- select_cols_soils(LN_190219, Site = "LN",Date = soil_dates[3])
+HB_000219 <- HB_000219 %>% 
+  select(Plot = Plot...1, Depth, Core_length, min_N_kgN_ha = `MinN (kg N/ha)`) %>% 
+  filter(!is.na(min_N_kgN_ha)) %>% 
+  mutate(Site = "HB",
+         Date = soil_dates[4])
+soil_minN <- bind_rows(LN_120918, LN_280119, LN_040219, LN_190219, HB_000219) %>% 
+  mutate(Id = 1:n())
+colnames(soil_minN)
+```
+
+
+```{r}
+LN_mike <- scrape_xl(url = url, sheet = "CalculatedDataLincoln", skip = 2)
+LN_mike_yield <- LN_mike %>% 
+  select(Site = Index, Date, Plot, Trt_num, Trt_name, Cultivar, Sowing_Date, N_timing, ends_with("Yield"), starts_with("Fi_")) %>% 
+  mutate(Site = "LN",
+         Date = as.Date(Date),
+         TotalDryYield = ifelse(is.na(TotalDryYield), Fi_TotalYield, TotalDryYield))
+```
+
+# lock everything into sqlite3
+
+```{r}
+# creat SQL3 and build the connection  ------------------------------------
+con <- dbConnect(RSQLite::SQLite(),'../Data/Pea_data.sqlite3')
+dbListTables(con)
+
+# creat table to correct the type of variable -----------------------------
+
+
+# dbExecute(con," CREATE TABLE `metadata` (
+#   `Site` TEXT NOT NULL,
+#   `Date` int NOT NULL,
+#   `Plot` int NOT NULL,
+#   `Block` int NOT NULL,
+#   `Trt_num` int NOT NULL,
+#   `Trt_name` TEXT NOT NULL,
+#   `Cultivar` TEXT NOT NULL,
+#   `Sowing_Date` TEXT NOT NULL,
+#   `N_timing` DOUBLE,
+#   PRIMARY KEY (Site, Date, Plot)
+# );
+# ")
+# 
+# dbExecute(con,"CREATE TABLE `biomass` (
+#   `Site` TEXT,
+#   `Date` REAL,
+#   `Event` int NOT NULL,
+#   `Plot` int NOT NULL ,
+#   `Block` int NOT NULL,
+#   `Trt_num` int NOT NULL,
+#   `Trt_name` TEXT,
+#   `Cultivar` TEXT,
+#   `Sowing_Date` TEXT,
+#   `N_timing` DOUBLE,
+#   `HA` REAL,
+#   `PP` REAL,
+#   `TFW` REAL,
+#   `SSFW` REAL,
+#   `SSDW` REAL,
+#   `partFW` REAL,
+#   `greenleafFW` REAL,
+#   `greenstemFW` REAL,
+#   `greenpodFW` REAL,
+#   `maturepodFW` REAL,
+#   `greengrainFW` REAL,
+#   `maturegrainFW` REAL,
+#   `Leaf_area` REAL,
+#   `Stem_area` REAL,
+#   `Pod_area` REAL,
+#   `greenleafDW` REAL,
+#   `greenstemDW` REAL,
+#   `greenpodDW` REAL,
+#   `maturepodDW` REAL,
+#   `greengrainDW` REAL,
+#   `maturegrainDW` REAL,
+#   `Final_ResidueSubFW` REAL,
+#   `Final_podFW` REAL,
+#   `Final_grainFW` REAL,
+#   `Final_100grainFW` REAL,
+#   `Final_ResidueSubDW` REAL,
+#   `Final_podDW` REAL,
+#   `Final_100grainDW` REAL,
+#   `Final_GrainMoisture` REAL,
+#   `Final_GrainCount` REAL,
+#   `N_Content_Green_Leaf` REAL,
+#   `N_Content_Green_Stem` REAL,
+#   `N_Content_Green_Pod` REAL,
+#   `N_Content_Mat_Pod` REAL,
+#   `N_Content_Green_Grain` REAL,
+#   `N_Content_Mat_Grain` REAL,
+#   `N_Content_Residue` REAL,
+#   `deadFW` REAL,
+#   `deadDW` REAL,
+#   `N_Content_Dead` REAL,
+#   `Pea_num` REAL,
+#   `Pod_num` REAL,
+#   `Final_grainSprouted` REAL,
+#   `Final_grainSproutedFW` REAL,
+#   `Final_GreenPodNumber` REAL,
+#   `Final_GreenPodFW` REAL,
+#   `Final_greenPodDW` REAL,
+#   `Final_grainSproutedDW` REAL,
+#   `Final_grainDW` REAL,
+#   `partDW` REAL,
+#   `green_Area` REAL,
+#   `grainFW` REAL,
+#   `grainDW` REAL,
+#   `Id` int NOT NULL,
+#   PRIMARY KEY (Id)
+# );")
+# 
+# dbExecute(con," CREATE TABLE `soilMinN` (
+#   `Site` TEXT NOT NULL,
+#   `Date` int NOT NULL,
+#   `Plot` int ,
+#   `Depth` TEXT NOT NULL,
+#   `Core_length` int NOT NULL,
+#   
+#   `min_N_kgN_ha` DOUBLE,
+#   `Id` int NOT NULL,
+#   PRIMARY KEY (Id)
+# );
+# ")
+# colnames(gs)
+# dbExecute(con," CREATE TABLE `greenseeker` (
+#   `Site` TEXT,
+#   `Date` int NOT NULL,
+#   `Plot` int NOT NULL,
+#   `NDVISC` DOUBLE,
+#   `Id` int NOT NULL,
+#   PRIMARY KEY (Id)
+#  
+# );
+# ")
+# colnames(sunscan)
+# dbExecute(con," CREATE TABLE `sunscan` (
+#   `Site` TEXT,
+#   `Date` int NOT NULL,
+#   `Plot` int NOT NULL,
+#   `Light_Int_Corr` DOUBLE,
+#   `Id` int NOT NULL,
+#   PRIMARY KEY (Id)
+#   
+# );
+# ")
+# # dbWriteTable(con, name = "metadata", value = metadata, append=TRUE)
+# 
+# dbWriteTable(con, name = "biomass", value = whole_plant, overwrite=TRUE)
+# dbWriteTable(con, name = "soilMinN", value = soil_minN, append = TRUE)
+# 
+# dbWriteTable(con, name = "greenseeker", value = gs,append=TRUE)
+# dbWriteTable(con, name = "sunscan", value = sunscan,append=TRUE)
+# dbWriteTable(con, name = "LN_mike_yield", value = LN_mike_yield, overwrite=TRUE)
+# 
+# DBI::dbDisconnect(con)
+```
+
+```{r remove tables from sqlite}
+# danger !!! ------
+# dbRemoveTable(con, "greenseeker")
+# dbRemoveTable(con, "sunscan")
+# dbRemoveTable(con, "biomass")
+# dbRemoveTable(con, "soilMinN")
+```
+
+```{r example of converting the date}
+con <- dbConnect(RSQLite::SQLite(),'../Data/Pea_data.sqlite3')
+dbListTables(con)
+
+gs_sql <- dbReadTable(con, "greenseeker")
+gs_sql %>% 
+  mutate(date = as.Date(c(17835), origin = "1970-01-01")) %>% 
+  head()
+DBI::dbDisconnect(con)
 ```
 

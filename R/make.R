@@ -9,7 +9,11 @@ source("R/packages.R")  # Load your packages, e.g. library(drake).
 source("R/functions.R") # Define your custom code as a bunch of functions.
 source("R/plan.R")      # Create your drake plan.
 
+
+
+
 # Call make() to run your work.
 # Your targets will be stored in a hidden .drake/ cache,
 # and you can read them back into memory with loadd() and read().
 make(plan)
+vis_drake_graph(drake_config(plan))
