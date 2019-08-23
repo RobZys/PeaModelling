@@ -21,7 +21,7 @@
 
 3. Greenseeker and Sunscan data from Lincoln are avilable in the same [excel](https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame.aspx?sourcedoc=/project/P442060-13/Research/Pea_Protein_GS_2018-19_Lincoln.xlsx&action=default)
 
-  3a. Greenseeker data is incomplete for HB
+  3a. Greenseeker data is incomplete for HB - Nathan has the raw data in the recon, will send them over. 
   3b. Sunscan data is called ceptometer in the excel sheet. 
 
 4. TDR [data](https://iplant.plantandfood.co.nz/project/P442060-13/_layouts/15/WopiFrame2.aspx?sourcedoc=/project/P442060-13/Research/Peas2018_19_SWCirrigation_Lincoln_HB.xlsx&action=default)
