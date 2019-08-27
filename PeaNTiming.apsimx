@@ -1,6 +1,6 @@
 {
   "$type": "Models.Core.Simulations, Models",
-  "ExplorerWidth": 283,
+  "ExplorerWidth": 300,
   "Version": 57,
   "Name": "Simulations",
   "Children": [
@@ -6127,6 +6127,7 @@
         {
           "$type": "Models.Core.Simulation, Models",
           "Descriptors": null,
+          "Services": [],
           "Name": "A_Block",
           "Children": [
             {
@@ -10021,6 +10022,7 @@
         {
           "$type": "Models.Core.Simulation, Models",
           "Descriptors": null,
+          "Services": [],
           "Name": "H_Block",
           "Children": [
             {
@@ -11843,7 +11845,18 @@
                     }
                   ],
                   "LegendPosition": 1,
-                  "DisabledSeries": [],
+                  "DisabledSeries": [
+                    "AEarlyNil",
+                    "BEarlyNil",
+                    "BEarlyEarly",
+                    "BMidEarly",
+                    "BLateEarly",
+                    "BMidLate",
+                    "BLateLate",
+                    "EarlyNil",
+                    "EarlyEarly",
+                    "EarlyLate"
+                  ],
                   "Name": "Grain",
                   "Children": [
                     {
@@ -11891,7 +11904,7 @@
                       "LineThickness": 0,
                       "Checkpoint": "Current",
                       "TableName": "Observed",
-                      "XFieldName": "Clock.Today()",
+                      "XFieldName": "Clock.Today",
                       "YFieldName": "Grain.NConc",
                       "X2FieldName": null,
                       "Y2FieldName": null,
