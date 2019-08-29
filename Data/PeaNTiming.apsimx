@@ -1,7 +1,7 @@
 {
   "$type": "Models.Core.Simulations, Models",
-  "ExplorerWidth": 283,
-  "Version": 57,
+  "ExplorerWidth": 280,
+  "Version": 59,
   "Name": "Simulations",
   "Children": [
     {
@@ -5091,7 +5091,7 @@
                                   "Children": [
                                     {
                                       "$type": "Models.Functions.Constant, Models",
-                                      "FixedValue": 0.3,
+                                      "FixedValue": 0.1,
                                       "Units": null,
                                       "Name": "InterNodeWt",
                                       "Children": [],
@@ -5856,7 +5856,8 @@
             {
               "$type": "Models.PMF.Cultivar, Models",
               "Command": [
-                "[Stem].DMDemands.Structural.Vegetative.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.25",
+                "[Stem].DMDemands.Structural.Vegetative.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.1",
+                "",
                 "[Phenology].GrainFilling.Target.FixedValue = 750"
               ],
               "Name": "A_green",
@@ -5868,7 +5869,8 @@
             {
               "$type": "Models.PMF.Cultivar, Models",
               "Command": [
-                "[Stem].DMDemands.Structural.Vegetative.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.2",
+                "[Stem].DMDemands.Structural.Vegetative.Structural.DMDemandFunction.InterNodeWt.FixedValue = 0.1",
+                "",
                 "[Phenology].GrainFilling.Target.FixedValue = 1000"
               ],
               "Name": "B_yellow",
@@ -5878,6 +5880,37 @@
               "ReadOnly": false
             }
           ],
+          "IncludeInDocumentation": true,
+          "Enabled": true,
+          "ReadOnly": false
+        },
+        {
+          "$type": "Models.Report.Report, Models",
+          "VariableNames": [
+            "[Clock].Today",
+            "[FieldPea].Phenology.CurrentStageName",
+            "[FieldPea].AboveGround.Wt as AboveGround.Wt",
+            "[FieldPea].Leaf.Live.Wt as Leaf.Live.Wt",
+            "[FieldPea].Stem.Live.Wt as Stem.Live.Wt",
+            "[FieldPea].Shell.Live.Wt as Pod.Live.Wt",
+            "[FieldPea].Grain.Live.Wt as  Grain.Live.Wt",
+            "[FieldPea].Leaf.LAI",
+            "[FieldPea].Stem.EnergyBalance.GAIFunction as StemGAI",
+            "[FieldPea].Shell.EnergyBalance.GAIFunction as PodGAI",
+            "",
+            "[FieldPea].Leaf.CoverTotal",
+            "[FieldPea].Structure.LeafTipsAppeared",
+            "[FieldPea].Leaf.Nconc",
+            "[FieldPea].Stem.Nconc",
+            "[FieldPea].Grain.Nconc",
+            "([FieldPea].Leaf.LAI+[FieldPea].Stem.EnergyBalance.LAI+[FieldPea].Shell.EnergyBalance.LAI) as GAI",
+            "[FieldPea].Stem.N as Stem.N"
+          ],
+          "EventNames": [
+            "[Clock].DoReport"
+          ],
+          "Name": "Report",
+          "Children": [],
           "IncludeInDocumentation": true,
           "Enabled": true,
           "ReadOnly": false
@@ -5902,6 +5935,19 @@
           "IncludeInDocumentation": true,
           "Enabled": true,
           "ReadOnly": false
+        },
+        {
+          "$type": "Models.PostSimulationTools.PredictedObserved, Models",
+          "PredictedTableName": "Report",
+          "ObservedTableName": "Observed",
+          "FieldNameUsedForMatch": "Clock.Today",
+          "FieldName2UsedForMatch": null,
+          "FieldName3UsedForMatch": null,
+          "Name": "PredictedObserved",
+          "Children": [],
+          "IncludeInDocumentation": true,
+          "Enabled": true,
+          "ReadOnly": false
         }
       ],
       "IncludeInDocumentation": true,
@@ -5911,6 +5957,7 @@
     {
       "$type": "Models.Factorial.Experiment, Models",
       "DisabledSimNames": [
+        "LincolnCultASowEarlyNitEarly",
         "LincolnCultASowMidNitNil",
         "LincolnCultASowLateNitNil",
         "LincolnCultASowMidNitEarly",
@@ -5940,7 +5987,7 @@
             },
             {
               "$type": "Models.Factorial.Factor, Models",
-              "Specification": null,
+              "Specification": "",
               "Name": "Cult",
               "Children": [
                 {
@@ -6126,7 +6173,6 @@
         },
         {
           "$type": "Models.Core.Simulation, Models",
-          "Descriptors": null,
           "Name": "A_Block",
           "Children": [
             {
@@ -6176,7 +6222,6 @@
               "Children": [
                 {
                   "$type": "Models.Soils.Soil, Models",
-                  "Weirdo": null,
                   "RecordNumber": 0,
                   "ASCOrder": null,
                   "ASCSubOrder": null,
@@ -6504,14 +6549,6 @@
                         300.0,
                         300.0
                       ],
-                      "Depth": [
-                        "0-10",
-                        "10-30",
-                        "30-60",
-                        "60-90",
-                        "90-120",
-                        "120-150"
-                      ],
                       "OC": [
                         0.1,
                         0.1,
@@ -6570,30 +6607,36 @@
                         300.0,
                         300.0
                       ],
-                      "NO3": [
-                        7.0,
-                        5.0,
-                        3.0,
-                        5.0,
-                        0.0,
-                        0.0
-                      ],
-                      "NH4": [
-                        0.1,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0
-                      ],
+                      "NO3N": {
+                        "$type": "Models.Soils.NitrogenValue, Models",
+                        "Values": [
+                          7.0,
+                          5.0,
+                          3.0,
+                          5.0,
+                          0.0,
+                          0.0
+                        ],
+                        "StoredAsPPM": false
+                      },
+                      "NH4N": {
+                        "$type": "Models.Soils.NitrogenValue, Models",
+                        "Values": [
+                          0.1,
+                          0.0,
+                          0.0,
+                          0.0,
+                          0.0,
+                          0.0
+                        ],
+                        "StoredAsPPM": true
+                      },
                       "SW": null,
                       "OC": null,
                       "EC": null,
                       "CL": null,
                       "ESP": null,
                       "PH": null,
-                      "NO3Units": 1,
-                      "NH4Units": 0,
                       "SWUnits": 0,
                       "OCUnits": 0,
                       "PHUnits": 0,
@@ -6839,6 +6882,20 @@
                   "IncludeInDocumentation": true,
                   "Enabled": true,
                   "ReadOnly": false
+                },
+                {
+                  "$type": "Models.Report.Report, Models",
+                  "VariableNames": [
+                    ""
+                  ],
+                  "EventNames": [
+                    "[Clock].DoReport"
+                  ],
+                  "Name": "Report",
+                  "Children": [],
+                  "IncludeInDocumentation": true,
+                  "Enabled": true,
+                  "ReadOnly": false
                 }
               ],
               "IncludeInDocumentation": true,
@@ -6893,7 +6950,7 @@
                   "YAxis": 0,
                   "ColourArgb": -16777216,
                   "FactorToVaryColours": "Nit",
-                  "FactorToVaryMarkers": "Sow",
+                  "FactorToVaryMarkers": null,
                   "FactorToVaryLines": "Cult",
                   "Marker": 11,
                   "MarkerSize": 1,
@@ -6923,9 +6980,9 @@
                   "YAxis": 0,
                   "ColourArgb": -16747854,
                   "FactorToVaryColours": "Nit",
-                  "FactorToVaryMarkers": "Sow",
+                  "FactorToVaryMarkers": "Cult",
                   "FactorToVaryLines": null,
-                  "Marker": 5,
+                  "Marker": 11,
                   "MarkerSize": 1,
                   "Line": 4,
                   "LineThickness": 0,
@@ -7368,7 +7425,7 @@
                   "CrossesAtZero": false
                 }
               ],
-              "LegendPosition": 1,
+              "LegendPosition": 0,
               "DisabledSeries": [],
               "Name": "Grain",
               "Children": [
@@ -7379,7 +7436,7 @@
                   "YAxis": 0,
                   "ColourArgb": -16777216,
                   "FactorToVaryColours": "Nit",
-                  "FactorToVaryMarkers": "Sow",
+                  "FactorToVaryMarkers": null,
                   "FactorToVaryLines": "Cult",
                   "Marker": 11,
                   "MarkerSize": 1,
@@ -7475,7 +7532,7 @@
                   "YAxis": 0,
                   "ColourArgb": -1663232,
                   "FactorToVaryColours": "Nit",
-                  "FactorToVaryMarkers": "Sow",
+                  "FactorToVaryMarkers": null,
                   "FactorToVaryLines": "Cult",
                   "Marker": 11,
                   "MarkerSize": 0,
@@ -7571,7 +7628,7 @@
                   "YAxis": 0,
                   "ColourArgb": -1663232,
                   "FactorToVaryColours": "Nit",
-                  "FactorToVaryMarkers": "Sow",
+                  "FactorToVaryMarkers": null,
                   "FactorToVaryLines": "Cult",
                   "Marker": 11,
                   "MarkerSize": 0,
@@ -7834,7 +7891,7 @@
                       "YAxis": 0,
                       "ColourArgb": -1663232,
                       "FactorToVaryColours": "Nit",
-                      "FactorToVaryMarkers": "Sow",
+                      "FactorToVaryMarkers": null,
                       "FactorToVaryLines": "Cult",
                       "Marker": 11,
                       "MarkerSize": 0,
@@ -7930,7 +7987,7 @@
                       "YAxis": 0,
                       "ColourArgb": -1663232,
                       "FactorToVaryColours": "Nit",
-                      "FactorToVaryMarkers": "Sow",
+                      "FactorToVaryMarkers": null,
                       "FactorToVaryLines": "Cult",
                       "Marker": 11,
                       "MarkerSize": 0,
@@ -8066,6 +8123,102 @@
                       "TableName": "Observed",
                       "XFieldName": "Clock.Today",
                       "YFieldName": "Grain.NConc",
+                      "X2FieldName": null,
+                      "Y2FieldName": null,
+                      "ShowInLegend": true,
+                      "IncludeSeriesNameInLegend": false,
+                      "Cumulative": false,
+                      "CumulativeX": false,
+                      "Filter": null,
+                      "Name": "Observed",
+                      "Children": [],
+                      "IncludeInDocumentation": true,
+                      "Enabled": true,
+                      "ReadOnly": false
+                    }
+                  ],
+                  "IncludeInDocumentation": false,
+                  "Enabled": true,
+                  "ReadOnly": false
+                },
+                {
+                  "$type": "Models.Graph.Graph, Models",
+                  "Caption": null,
+                  "Axis": [
+                    {
+                      "$type": "Models.Graph.Axis, Models",
+                      "Type": 3,
+                      "Title": "Date",
+                      "Inverted": false,
+                      "Minimum": "NaN",
+                      "Maximum": "NaN",
+                      "Interval": "NaN",
+                      "DateTimeAxis": false,
+                      "CrossesAtZero": false
+                    },
+                    {
+                      "$type": "Models.Graph.Axis, Models",
+                      "Type": 0,
+                      "Title": null,
+                      "Inverted": false,
+                      "Minimum": "NaN",
+                      "Maximum": "NaN",
+                      "Interval": "NaN",
+                      "DateTimeAxis": false,
+                      "CrossesAtZero": false
+                    }
+                  ],
+                  "LegendPosition": 1,
+                  "DisabledSeries": [],
+                  "Name": "Stem1",
+                  "Children": [
+                    {
+                      "$type": "Models.Graph.Series, Models",
+                      "Type": 1,
+                      "XAxis": 3,
+                      "YAxis": 0,
+                      "ColourArgb": -1663232,
+                      "FactorToVaryColours": "Nit",
+                      "FactorToVaryMarkers": null,
+                      "FactorToVaryLines": "Cult",
+                      "Marker": 11,
+                      "MarkerSize": 0,
+                      "Line": 0,
+                      "LineThickness": 0,
+                      "Checkpoint": "Current",
+                      "TableName": "LincReport",
+                      "XFieldName": "Clock.Today",
+                      "YFieldName": "FieldPea.Stem.Nconc",
+                      "X2FieldName": null,
+                      "Y2FieldName": null,
+                      "ShowInLegend": true,
+                      "IncludeSeriesNameInLegend": false,
+                      "Cumulative": false,
+                      "CumulativeX": false,
+                      "Filter": null,
+                      "Name": "Predicted",
+                      "Children": [],
+                      "IncludeInDocumentation": true,
+                      "Enabled": true,
+                      "ReadOnly": false
+                    },
+                    {
+                      "$type": "Models.Graph.Series, Models",
+                      "Type": 1,
+                      "XAxis": 3,
+                      "YAxis": 0,
+                      "ColourArgb": -16747854,
+                      "FactorToVaryColours": "Nit",
+                      "FactorToVaryMarkers": "Sow",
+                      "FactorToVaryLines": null,
+                      "Marker": 5,
+                      "MarkerSize": 0,
+                      "Line": 4,
+                      "LineThickness": 0,
+                      "Checkpoint": "Current",
+                      "TableName": "Observed",
+                      "XFieldName": "Clock.Today",
+                      "YFieldName": "Stem.N.Conc",
                       "X2FieldName": null,
                       "Y2FieldName": null,
                       "ShowInLegend": true,
@@ -10020,7 +10173,6 @@
         },
         {
           "$type": "Models.Core.Simulation, Models",
-          "Descriptors": null,
           "Name": "H_Block",
           "Children": [
             {
@@ -10070,7 +10222,6 @@
               "Children": [
                 {
                   "$type": "Models.Soils.Soil, Models",
-                  "Weirdo": null,
                   "RecordNumber": 0,
                   "ASCOrder": null,
                   "ASCSubOrder": null,
@@ -10398,14 +10549,6 @@
                         300.0,
                         300.0
                       ],
-                      "Depth": [
-                        "0-10",
-                        "10-30",
-                        "30-60",
-                        "60-90",
-                        "90-120",
-                        "120-150"
-                      ],
                       "OC": [
                         0.1,
                         0.1,
@@ -10464,30 +10607,36 @@
                         300.0,
                         300.0
                       ],
-                      "NO3": [
-                        8.11,
-                        5.92,
-                        1.62,
-                        0.99,
-                        0.0,
-                        0.0
-                      ],
-                      "NH4": [
-                        1.15,
-                        0.91,
-                        0.34,
-                        0.28,
-                        0.0,
-                        0.0
-                      ],
+                      "NO3N": {
+                        "$type": "Models.Soils.NitrogenValue, Models",
+                        "Values": [
+                          8.11,
+                          5.92,
+                          1.62,
+                          0.99,
+                          0.0,
+                          0.0
+                        ],
+                        "StoredAsPPM": true
+                      },
+                      "NH4N": {
+                        "$type": "Models.Soils.NitrogenValue, Models",
+                        "Values": [
+                          1.15,
+                          0.91,
+                          0.34,
+                          0.28,
+                          0.0,
+                          0.0
+                        ],
+                        "StoredAsPPM": true
+                      },
                       "SW": null,
                       "OC": null,
                       "EC": null,
                       "CL": null,
                       "ESP": null,
                       "PH": null,
-                      "NO3Units": 0,
-                      "NH4Units": 0,
                       "SWUnits": 0,
                       "OCUnits": 0,
                       "PHUnits": 0,
@@ -10696,6 +10845,20 @@
                   "IncludeInDocumentation": true,
                   "Enabled": true,
                   "ReadOnly": false
+                },
+                {
+                  "$type": "Models.Report.Report, Models",
+                  "VariableNames": [
+                    ""
+                  ],
+                  "EventNames": [
+                    "[Clock].DoReport"
+                  ],
+                  "Name": "Report",
+                  "Children": [],
+                  "IncludeInDocumentation": true,
+                  "Enabled": true,
+                  "ReadOnly": false
                 }
               ],
               "IncludeInDocumentation": true,
@@ -10750,7 +10913,7 @@
                   "YAxis": 0,
                   "ColourArgb": -16777216,
                   "FactorToVaryColours": "Nit",
-                  "FactorToVaryMarkers": "Sow",
+                  "FactorToVaryMarkers": null,
                   "FactorToVaryLines": "Cult",
                   "Marker": 11,
                   "MarkerSize": 0,
@@ -11332,7 +11495,7 @@
                   "YAxis": 0,
                   "ColourArgb": -1663232,
                   "FactorToVaryColours": "Nit",
-                  "FactorToVaryMarkers": "Sow",
+                  "FactorToVaryMarkers": null,
                   "FactorToVaryLines": "Cult",
                   "Marker": 11,
                   "MarkerSize": 0,
@@ -11435,7 +11598,7 @@
                   "Line": 0,
                   "LineThickness": 0,
                   "Checkpoint": "Current",
-                  "TableName": "LincReport",
+                  "TableName": "HBReport",
                   "XFieldName": "Clock.Today",
                   "YFieldName": "FieldPea.Shell.Live.Wt",
                   "X2FieldName": null,
@@ -11466,8 +11629,8 @@
                   "LineThickness": 0,
                   "Checkpoint": "Current",
                   "TableName": "Observed",
-                  "XFieldName": "Clock.Today()",
-                  "YFieldName": "FieldPea.Pod.Live.Wt()",
+                  "XFieldName": "Clock.Today",
+                  "YFieldName": "Pod.Live.Wt",
                   "X2FieldName": null,
                   "Y2FieldName": null,
                   "ShowInLegend": true,
@@ -11843,7 +12006,18 @@
                     }
                   ],
                   "LegendPosition": 1,
-                  "DisabledSeries": [],
+                  "DisabledSeries": [
+                    "AEarlyNil",
+                    "BEarlyNil",
+                    "BEarlyEarly",
+                    "BMidEarly",
+                    "BLateEarly",
+                    "BMidLate",
+                    "BLateLate",
+                    "EarlyNil",
+                    "EarlyEarly",
+                    "EarlyLate"
+                  ],
                   "Name": "Grain",
                   "Children": [
                     {
@@ -11891,7 +12065,7 @@
                       "LineThickness": 0,
                       "Checkpoint": "Current",
                       "TableName": "Observed",
-                      "XFieldName": "Clock.Today()",
+                      "XFieldName": "Clock.Today",
                       "YFieldName": "Grain.NConc",
                       "X2FieldName": null,
                       "Y2FieldName": null,
@@ -11908,6 +12082,484 @@
                     }
                   ],
                   "IncludeInDocumentation": false,
+                  "Enabled": true,
+                  "ReadOnly": false
+                }
+              ],
+              "IncludeInDocumentation": true,
+              "Enabled": true,
+              "ReadOnly": false
+            }
+          ],
+          "IncludeInDocumentation": true,
+          "Enabled": true,
+          "ReadOnly": false
+        },
+        {
+          "$type": "Models.Graph.Graph, Models",
+          "Caption": null,
+          "Axis": [
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 3,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            },
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 0,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            }
+          ],
+          "LegendPosition": 3,
+          "DisabledSeries": [],
+          "Name": "Leaf",
+          "Children": [
+            {
+              "$type": "Models.Graph.Series, Models",
+              "Type": 1,
+              "XAxis": 3,
+              "YAxis": 0,
+              "ColourArgb": -16777216,
+              "FactorToVaryColours": "SimulationName",
+              "FactorToVaryMarkers": null,
+              "FactorToVaryLines": null,
+              "Marker": 0,
+              "MarkerSize": 0,
+              "Line": 4,
+              "LineThickness": 0,
+              "Checkpoint": "Current",
+              "TableName": "PredictedObserved",
+              "XFieldName": "Observed.Leaf.Live.Wt",
+              "YFieldName": "Predicted.Leaf.Live.Wt",
+              "X2FieldName": null,
+              "Y2FieldName": null,
+              "ShowInLegend": false,
+              "IncludeSeriesNameInLegend": false,
+              "Cumulative": false,
+              "CumulativeX": false,
+              "Filter": null,
+              "Name": "Series1",
+              "Children": [
+                {
+                  "$type": "Models.Graph.Regression, Models",
+                  "ForEachSeries": false,
+                  "showOneToOne": true,
+                  "showEquation": true,
+                  "Name": "Regression",
+                  "Children": [],
+                  "IncludeInDocumentation": true,
+                  "Enabled": true,
+                  "ReadOnly": false
+                }
+              ],
+              "IncludeInDocumentation": true,
+              "Enabled": true,
+              "ReadOnly": false
+            }
+          ],
+          "IncludeInDocumentation": true,
+          "Enabled": true,
+          "ReadOnly": false
+        }
+      ],
+      "IncludeInDocumentation": true,
+      "Enabled": true,
+      "ReadOnly": false
+    },
+    {
+      "$type": "Models.Core.Folder, Models",
+      "ShowPageOfGraphs": true,
+      "Name": "Regressions",
+      "Children": [
+        {
+          "$type": "Models.Graph.Graph, Models",
+          "Caption": null,
+          "Axis": [
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 3,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            },
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 0,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            }
+          ],
+          "LegendPosition": 3,
+          "DisabledSeries": [],
+          "Name": "GAI",
+          "Children": [
+            {
+              "$type": "Models.Graph.Series, Models",
+              "Type": 1,
+              "XAxis": 3,
+              "YAxis": 0,
+              "ColourArgb": -16777216,
+              "FactorToVaryColours": "SimulationName",
+              "FactorToVaryMarkers": null,
+              "FactorToVaryLines": null,
+              "Marker": 0,
+              "MarkerSize": 0,
+              "Line": 4,
+              "LineThickness": 0,
+              "Checkpoint": "Current",
+              "TableName": "PredictedObserved",
+              "XFieldName": "Observed.GAI",
+              "YFieldName": "Predicted.GAI",
+              "X2FieldName": null,
+              "Y2FieldName": null,
+              "ShowInLegend": false,
+              "IncludeSeriesNameInLegend": false,
+              "Cumulative": false,
+              "CumulativeX": false,
+              "Filter": null,
+              "Name": "Series1",
+              "Children": [
+                {
+                  "$type": "Models.Graph.Regression, Models",
+                  "ForEachSeries": false,
+                  "showOneToOne": true,
+                  "showEquation": true,
+                  "Name": "Regression",
+                  "Children": [],
+                  "IncludeInDocumentation": true,
+                  "Enabled": true,
+                  "ReadOnly": false
+                }
+              ],
+              "IncludeInDocumentation": true,
+              "Enabled": true,
+              "ReadOnly": false
+            }
+          ],
+          "IncludeInDocumentation": true,
+          "Enabled": true,
+          "ReadOnly": false
+        },
+        {
+          "$type": "Models.Graph.Graph, Models",
+          "Caption": null,
+          "Axis": [
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 3,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            },
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 0,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            }
+          ],
+          "LegendPosition": 3,
+          "DisabledSeries": [],
+          "Name": "Leaf",
+          "Children": [
+            {
+              "$type": "Models.Graph.Series, Models",
+              "Type": 1,
+              "XAxis": 3,
+              "YAxis": 0,
+              "ColourArgb": -16777216,
+              "FactorToVaryColours": "SimulationName",
+              "FactorToVaryMarkers": null,
+              "FactorToVaryLines": null,
+              "Marker": 0,
+              "MarkerSize": 0,
+              "Line": 4,
+              "LineThickness": 0,
+              "Checkpoint": "Current",
+              "TableName": "PredictedObserved",
+              "XFieldName": "Observed.Leaf.Live.Wt",
+              "YFieldName": "Predicted.Leaf.Live.Wt",
+              "X2FieldName": null,
+              "Y2FieldName": null,
+              "ShowInLegend": false,
+              "IncludeSeriesNameInLegend": false,
+              "Cumulative": false,
+              "CumulativeX": false,
+              "Filter": null,
+              "Name": "Series1",
+              "Children": [
+                {
+                  "$type": "Models.Graph.Regression, Models",
+                  "ForEachSeries": false,
+                  "showOneToOne": true,
+                  "showEquation": true,
+                  "Name": "Regression",
+                  "Children": [],
+                  "IncludeInDocumentation": true,
+                  "Enabled": true,
+                  "ReadOnly": false
+                }
+              ],
+              "IncludeInDocumentation": true,
+              "Enabled": true,
+              "ReadOnly": false
+            }
+          ],
+          "IncludeInDocumentation": true,
+          "Enabled": true,
+          "ReadOnly": false
+        },
+        {
+          "$type": "Models.Graph.Graph, Models",
+          "Caption": null,
+          "Axis": [
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 3,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            },
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 0,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            }
+          ],
+          "LegendPosition": 3,
+          "DisabledSeries": [],
+          "Name": "Stem",
+          "Children": [
+            {
+              "$type": "Models.Graph.Series, Models",
+              "Type": 1,
+              "XAxis": 3,
+              "YAxis": 0,
+              "ColourArgb": -16777216,
+              "FactorToVaryColours": "SimulationName",
+              "FactorToVaryMarkers": null,
+              "FactorToVaryLines": null,
+              "Marker": 0,
+              "MarkerSize": 0,
+              "Line": 4,
+              "LineThickness": 0,
+              "Checkpoint": "Current",
+              "TableName": "PredictedObserved",
+              "XFieldName": "Observed.Stem.Live.Wt",
+              "YFieldName": "Predicted.Stem.Live.Wt",
+              "X2FieldName": null,
+              "Y2FieldName": null,
+              "ShowInLegend": false,
+              "IncludeSeriesNameInLegend": false,
+              "Cumulative": false,
+              "CumulativeX": false,
+              "Filter": null,
+              "Name": "Series1",
+              "Children": [
+                {
+                  "$type": "Models.Graph.Regression, Models",
+                  "ForEachSeries": false,
+                  "showOneToOne": true,
+                  "showEquation": true,
+                  "Name": "Regression",
+                  "Children": [],
+                  "IncludeInDocumentation": true,
+                  "Enabled": true,
+                  "ReadOnly": false
+                }
+              ],
+              "IncludeInDocumentation": true,
+              "Enabled": true,
+              "ReadOnly": false
+            }
+          ],
+          "IncludeInDocumentation": true,
+          "Enabled": true,
+          "ReadOnly": false
+        },
+        {
+          "$type": "Models.Graph.Graph, Models",
+          "Caption": null,
+          "Axis": [
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 3,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            },
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 0,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            }
+          ],
+          "LegendPosition": 3,
+          "DisabledSeries": [],
+          "Name": "Shell",
+          "Children": [
+            {
+              "$type": "Models.Graph.Series, Models",
+              "Type": 1,
+              "XAxis": 3,
+              "YAxis": 0,
+              "ColourArgb": -16777216,
+              "FactorToVaryColours": "SimulationName",
+              "FactorToVaryMarkers": null,
+              "FactorToVaryLines": null,
+              "Marker": 0,
+              "MarkerSize": 0,
+              "Line": 4,
+              "LineThickness": 0,
+              "Checkpoint": "Current",
+              "TableName": "PredictedObserved",
+              "XFieldName": "Observed.Pod.Live.Wt",
+              "YFieldName": "Predicted.Pod.Live.Wt",
+              "X2FieldName": null,
+              "Y2FieldName": null,
+              "ShowInLegend": false,
+              "IncludeSeriesNameInLegend": false,
+              "Cumulative": false,
+              "CumulativeX": false,
+              "Filter": null,
+              "Name": "Series1",
+              "Children": [
+                {
+                  "$type": "Models.Graph.Regression, Models",
+                  "ForEachSeries": false,
+                  "showOneToOne": true,
+                  "showEquation": true,
+                  "Name": "Regression",
+                  "Children": [],
+                  "IncludeInDocumentation": true,
+                  "Enabled": true,
+                  "ReadOnly": false
+                }
+              ],
+              "IncludeInDocumentation": true,
+              "Enabled": true,
+              "ReadOnly": false
+            }
+          ],
+          "IncludeInDocumentation": true,
+          "Enabled": true,
+          "ReadOnly": false
+        },
+        {
+          "$type": "Models.Graph.Graph, Models",
+          "Caption": null,
+          "Axis": [
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 3,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            },
+            {
+              "$type": "Models.Graph.Axis, Models",
+              "Type": 0,
+              "Title": null,
+              "Inverted": false,
+              "Minimum": "NaN",
+              "Maximum": "NaN",
+              "Interval": "NaN",
+              "DateTimeAxis": false,
+              "CrossesAtZero": false
+            }
+          ],
+          "LegendPosition": 3,
+          "DisabledSeries": [],
+          "Name": "Grain",
+          "Children": [
+            {
+              "$type": "Models.Graph.Series, Models",
+              "Type": 1,
+              "XAxis": 3,
+              "YAxis": 0,
+              "ColourArgb": -16777216,
+              "FactorToVaryColours": "SimulationName",
+              "FactorToVaryMarkers": null,
+              "FactorToVaryLines": null,
+              "Marker": 0,
+              "MarkerSize": 0,
+              "Line": 4,
+              "LineThickness": 0,
+              "Checkpoint": "Current",
+              "TableName": "PredictedObserved",
+              "XFieldName": "Predicted.Grain.Live.Wt",
+              "YFieldName": "Observed.Grain.Live.Wt",
+              "X2FieldName": null,
+              "Y2FieldName": null,
+              "ShowInLegend": false,
+              "IncludeSeriesNameInLegend": false,
+              "Cumulative": false,
+              "CumulativeX": false,
+              "Filter": null,
+              "Name": "Series1",
+              "Children": [
+                {
+                  "$type": "Models.Graph.Regression, Models",
+                  "ForEachSeries": false,
+                  "showOneToOne": true,
+                  "showEquation": true,
+                  "Name": "Regression",
+                  "Children": [],
+                  "IncludeInDocumentation": true,
                   "Enabled": true,
                   "ReadOnly": false
                 }
